@@ -12,6 +12,9 @@
               <a href="#" @click.prevent="currentView = 'dashboard'" :class="{ active: currentView === 'dashboard' }">
                 Dashboard
               </a>
+              <a href="#" @click.prevent="currentView = 'analytics'" :class="{ active: currentView === 'analytics' }">
+                Analytics
+              </a>
               <a href="#" @click.prevent="currentView = 'trades'" :class="{ active: currentView === 'trades' }">
                 All Trades
               </a>
@@ -23,7 +26,8 @@
       <!-- Main Content -->
       <main class="app-main">
         <div class="container">
-          <Dashboard v-if="currentView === 'dashboard'" />
+          <Dashboard v-if="currentView === 'dashboard'" :trades="trades" />
+          <Analytics v-else-if="currentView === 'analytics'" :trades="trades" />
           <AllTrades v-else-if="currentView === 'trades'" />
         </div>
       </main>
@@ -39,21 +43,40 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import Dashboard from './components/Dashboard.vue';
+import Analytics from './components/Analytics.vue';
 import AllTrades from './components/AllTrades.vue';
+import { subscribeToTrades } from './firebase/trades';
 
 export default {
   name: 'App',
   components: {
     Dashboard,
+    Analytics,
     AllTrades,
   },
   setup() {
     const currentView = ref('dashboard');
+    const trades = ref([]);
+    let unsubscribe = null;
+
+    // Subscribe to trades for all views
+    onMounted(() => {
+      unsubscribe = subscribeToTrades((newTrades) => {
+        trades.value = newTrades;
+      });
+    });
+
+    onUnmounted(() => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    });
 
     return {
       currentView,
+      trades,
     };
   },
 };

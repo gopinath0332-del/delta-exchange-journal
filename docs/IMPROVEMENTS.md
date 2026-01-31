@@ -21,7 +21,7 @@ This document outlines potential enhancements and features to improve the tradin
 - [ ] **R-Multiple Analysis** - Risk/reward ratio tracking
 - [ ] **Monthly/Weekly Performance** - Calendar heatmap view
 - [ ] **Time-based Analysis** - Performance by day of week, hour of day
-- [ ] **Consecutive Wins/Losses** - Track streaks
+- [x] **Consecutive Wins/Losses** - Track streaks ✅ **IMPLEMENTED**
 
 ### 3. Export & Reporting
 

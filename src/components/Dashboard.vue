@@ -6,15 +6,7 @@
       <p>Track, analyze, and improve your trading performance</p>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="loading-container">
-      <div class="spinner"></div>
-      <p>Loading your trades...</p>
-    </div>
-
-    <!-- Dashboard Content -->
-    <div v-else>
-      <!-- Key Stats Grid -->
+    <!-- Key Stats Grid -->
       <div class="grid grid-cols-4 mb-xl">
         <StatsCard
           label="Total PnL"
@@ -49,36 +41,6 @@
         />
       </div>
 
-      <!-- Charts Section -->
-      <div class="grid grid-cols-2 mb-xl">
-        <!-- PnL Chart -->
-        <div class="glass-card p-xl">
-          <h3>Cumulative PnL</h3>
-          <PnLChart :trades="closedTrades" />
-        </div>
-
-        <!-- Strategy Performance -->
-        <div class="glass-card p-xl">
-          <h3>Strategy Performance</h3>
-          <StrategyPerformance :trades="closedTrades" />
-        </div>
-      </div>
-
-      <!-- Best & Worst Trades -->
-      <div class="grid grid-cols-2 mb-xl">
-        <div class="glass-card p-xl">
-          <h3 class="mb-md">🏆 Best Trade</h3>
-          <TradeCard v-if="bestTrade" :trade="bestTrade" compact />
-          <p v-else class="text-muted">No closed trades yet</p>
-        </div>
-
-        <div class="glass-card p-xl">
-          <h3 class="mb-md">📉 Worst Trade</h3>
-          <TradeCard v-if="worstTrade" :trade="worstTrade" compact />
-          <p v-else class="text-muted">No closed trades yet</p>
-        </div>
-      </div>
-
       <!-- Recent Trades -->
       <div class="glass-card p-xl">
         <div class="flex justify-between items-center mb-lg">
@@ -87,25 +49,36 @@
         </div>
         <TradeList :trades="recentTrades" :limit="5" />
       </div>
-    </div>
+
+      <!-- Quick Links to Other Views -->
+      <div class="grid grid-cols-2 mb-xl mt-xl">
+        <router-link to="/analytics" class="glass-card p-xl hover-lift" style="text-decoration: none; color: inherit;">
+          <div class="quick-link-card">
+            <div class="icon-large">📊</div>
+            <h3>View Analytics</h3>
+            <p class="text-muted">Deep dive into performance metrics and charts</p>
+          </div>
+        </router-link>
+        <router-link to="/trades" class="glass-card p-xl hover-lift" style="text-decoration: none; color: inherit;">
+          <div class="quick-link-card">
+            <div class="icon-large">📋</div>
+            <h3>All Trades</h3>
+            <p class="text-muted">Browse complete trading history</p>
+          </div>
+        </router-link>
+      </div>
   </div>
 </template>
 
 <script>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { computed } from 'vue';
 import StatsCard from './StatsCard.vue';
-import TradeCard from './TradeCard.vue';
 import TradeList from './TradeList.vue';
-import PnLChart from './PnLChart.vue';
-import StrategyPerformance from './StrategyPerformance.vue';
-import { subscribeToTrades } from '../firebase/trades';
 import {
   calculateTotalPnL,
   calculateWinRate,
   calculateAverageProfit,
   calculateAverageLoss,
-  getBestTrade,
-  getWorstTrade,
 } from '../utils/calculations';
 import { formatCurrency, formatPercentage } from '../utils/formatters';
 
@@ -113,23 +86,22 @@ export default {
   name: 'Dashboard',
   components: {
     StatsCard,
-    TradeCard,
     TradeList,
-    PnLChart,
-    StrategyPerformance,
   },
-  setup() {
-    const trades = ref([]);
-    const loading = ref(true);
-    let unsubscribe = null;
-
+  props: {
+    trades: {
+      type: Array,
+      required: true,
+    },
+  },
+  setup(props) {
     // Computed statistics
     const closedTrades = computed(() =>
-      trades.value.filter((t) => t.status === 'CLOSED')
+      props.trades.filter((t) => t.status === 'CLOSED')
     );
 
     const openTrades = computed(() =>
-      trades.value.filter((t) => t.status === 'OPEN')
+      props.trades.filter((t) => t.status === 'OPEN')
     );
 
     const totalClosedTrades = computed(() => closedTrades.value.length);
@@ -148,11 +120,7 @@ export default {
 
     const avgLoss = computed(() => calculateAverageLoss(closedTrades.value));
 
-    const bestTrade = computed(() => getBestTrade(closedTrades.value));
-
-    const worstTrade = computed(() => getWorstTrade(closedTrades.value));
-
-    const recentTrades = computed(() => trades.value.slice(0, 5));
+    const recentTrades = computed(() => props.trades.slice(0, 5));
 
     const overallPnLPercent = computed(() => {
       // Calculate overall PnL percentage based on total margin used
@@ -164,23 +132,7 @@ export default {
       return (totalPnL.value / totalMargin) * 100;
     });
 
-    // Subscribe to trades
-    onMounted(() => {
-      unsubscribe = subscribeToTrades((newTrades) => {
-        trades.value = newTrades;
-        loading.value = false;
-      });
-    });
-
-    onUnmounted(() => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    });
-
     return {
-      trades,
-      loading,
       closedTrades,
       openTrades,
       totalClosedTrades,
@@ -189,8 +141,6 @@ export default {
       winningTrades,
       avgProfit,
       avgLoss,
-      bestTrade,
-      worstTrade,
       recentTrades,
       overallPnLPercent,
       formatCurrency,
@@ -232,9 +182,29 @@ export default {
   gap: var(--spacing-lg);
 }
 
+.quick-link-card {
+  text-align: center;
+  transition: transform var(--transition-base);
+}
+
+.icon-large {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.quick-link-card h3 {
+  margin-bottom: var(--spacing-sm);
+}
+
+.hover-lift {
+  cursor: pointer;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+}
+
 .text-muted {
   color: var(--color-text-muted);
-  text-align: center;
-  padding: var(--spacing-xl);
 }
 </style>

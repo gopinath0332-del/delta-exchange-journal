@@ -194,3 +194,90 @@ export function calculateTotalFunding(trades) {
     return total;
   }, 0);
 }
+
+/**
+ * Calculate win/loss streaks
+ * @param {Array} trades - Array of trade objects
+ * @returns {Object} Streak statistics
+ */
+export function calculateStreaks(trades) {
+  const closedTrades = trades
+    .filter((t) => t.status === 'CLOSED' && typeof t.pnl === 'number')
+    .sort((a, b) => {
+      const dateA = a.exit_timestamp?.toDate?.() || new Date(a.exit_timestamp);
+      const dateB = b.exit_timestamp?.toDate?.() || new Date(b.exit_timestamp);
+      return dateA - dateB;
+    });
+
+  if (closedTrades.length === 0) {
+    return {
+      currentStreak: 0,
+      currentStreakType: null,
+      longestWinStreak: 0,
+      longestLossStreak: 0,
+    };
+  }
+
+  let currentStreak = 0;
+  let currentStreakType = null;
+  let longestWinStreak = 0;
+  let longestLossStreak = 0;
+  let tempWinStreak = 0;
+  let tempLossStreak = 0;
+
+  closedTrades.forEach((trade) => {
+    const isWin = trade.pnl > 0;
+
+    if (isWin) {
+      tempWinStreak++;
+      tempLossStreak = 0;
+      
+      if (tempWinStreak > longestWinStreak) {
+        longestWinStreak = tempWinStreak;
+      }
+
+      // Update current streak
+      currentStreak = tempWinStreak;
+      currentStreakType = 'win';
+    } else {
+      tempLossStreak++;
+      tempWinStreak = 0;
+      
+      if (tempLossStreak > longestLossStreak) {
+        longestLossStreak = tempLossStreak;
+      }
+
+      // Update current streak
+      currentStreak = tempLossStreak;
+      currentStreakType = 'loss';
+    }
+  });
+
+  return {
+    currentStreak,
+    currentStreakType, // 'win' or 'loss'
+    longestWinStreak,
+    longestLossStreak,
+  };
+}
+
+/**
+ * Get the current active streak details
+ * @param {Array} trades - Array of trade objects
+ * @returns {Object} Current streak information
+ */
+export function getCurrentStreak(trades) {
+  const streaks = calculateStreaks(trades);
+  
+  return {
+    count: streaks.currentStreak,
+    type: streaks.currentStreakType,
+    emoji: streaks.currentStreakType === 'win' ? '🔥' : '❄️',
+    message: streaks.currentStreakType === 'win' 
+      ? `${streaks.currentStreak} consecutive wins!`
+      : streaks.currentStreakType === 'loss'
+      ? `${streaks.currentStreak} consecutive losses`
+      : 'No trades yet',
+  };
+}
+
