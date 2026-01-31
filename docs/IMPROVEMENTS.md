@@ -17,7 +17,7 @@ This document outlines potential enhancements and features to improve the tradin
 
 - [ ] **Profit Factor** - Ratio of gross profit to gross loss
 - [ ] **Sharpe Ratio** - Risk-adjusted return metric
-- [ ] **Maximum Drawdown** - Largest peak-to-trough decline
+- [x] **Maximum Drawdown** - Largest peak-to-trough decline ✅ **IMPLEMENTED**
 - [ ] **R-Multiple Analysis** - Risk/reward ratio tracking
 - [x] **Monthly/Weekly Performance** - Calendar heatmap view ✅ **IMPLEMENTED**
 - [x] **Time-based Analysis** - Performance by day of week, hour of day ✅ **IMPLEMENTED**

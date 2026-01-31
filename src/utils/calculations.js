@@ -412,3 +412,40 @@ export function calculateTimeBasedPerformance(trades) {
   return { byDay: byDaySorted, byHour };
 }
 
+/**
+ * Calculate Maximum Drawdown (absolute currency value)
+ * @param {Array} trades - Array of trade objects
+ * @returns {number} Maximum drawdown amount (positive number representing the drop)
+ */
+export function calculateMaxDrawdown(trades) {
+  const closedTrades = trades.filter((t) => t.status === 'CLOSED');
+  
+  if (closedTrades.length === 0) return 0;
+  
+  // Sort by exit time
+  const sortedTrades = [...closedTrades].sort((a, b) => {
+    const timeA = a.exit_timestamp?.toDate?.() || new Date(a.exit_timestamp);
+    const timeB = b.exit_timestamp?.toDate?.() || new Date(b.exit_timestamp);
+    return timeA - timeB;
+  });
+  
+  let currentPnL = 0;
+  let peak = 0;
+  let maxDrawdown = 0;
+  
+  sortedTrades.forEach(trade => {
+    currentPnL += (trade.pnl || 0);
+    
+    if (currentPnL > peak) {
+      peak = currentPnL;
+    }
+    
+    const drawdown = peak - currentPnL;
+    if (drawdown > maxDrawdown) {
+      maxDrawdown = drawdown;
+    }
+  });
+  
+  return maxDrawdown;
+}
+

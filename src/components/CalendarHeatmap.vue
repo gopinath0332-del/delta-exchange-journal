@@ -1,29 +1,31 @@
 <template>
   <div class="calendar-heatmap" ref="heatmapRef" @mouseleave="hideTooltip">
-    <div 
-      v-if="tooltip.visible" 
-      class="custom-tooltip" 
-      :style="{ top: tooltip.y + 'px', left: tooltip.x + 'px' }"
-    >
-      <div class="tooltip-header">
-        <span class="tooltip-date">{{ formatShortDate(tooltip.day.date) }}</span>
-        <span class="tooltip-pnl" :class="getPnLClass(tooltip.day.pnl)">
-          {{ formatCurrency(tooltip.day.pnl) }}
-        </span>
-      </div>
-      <div class="tooltip-stats">
-        {{ tooltip.day.tradeCount }} trade{{ tooltip.day.tradeCount !== 1 ? 's' : '' }}
-      </div>
-      <div v-if="tooltip.day.trades && tooltip.day.trades.length > 0" class="tooltip-trades">
-        <div v-for="trade in tooltip.day.trades.slice(0, 5)" :key="trade.id" class="tooltip-trade-row">
-           <span class="trade-symbol">{{ trade.symbol }}</span>
-           <span :class="getPnLClass(trade.pnl)">{{ formatCurrency(trade.pnl) }}</span>
+    <Teleport to="body">
+      <div 
+        v-if="tooltip.visible" 
+        class="custom-tooltip" 
+        :style="{ top: tooltip.y + 'px', left: tooltip.x + 'px' }"
+      >
+        <div class="tooltip-header">
+          <span class="tooltip-date">{{ formatShortDate(tooltip.day.date) }}</span>
+          <span class="tooltip-pnl" :class="getPnLClass(tooltip.day.pnl)">
+            {{ formatCurrency(tooltip.day.pnl) }}
+          </span>
         </div>
-        <div v-if="tooltip.day.trades.length > 5" class="tooltip-more">
-           +{{ tooltip.day.trades.length - 5 }} more
+        <div class="tooltip-stats">
+          {{ tooltip.day.tradeCount }} trade{{ tooltip.day.tradeCount !== 1 ? 's' : '' }}
+        </div>
+        <div v-if="tooltip.day.trades && tooltip.day.trades.length > 0" class="tooltip-trades">
+          <div v-for="trade in tooltip.day.trades.slice(0, 5)" :key="trade.id" class="tooltip-trade-row">
+             <span class="trade-symbol">{{ trade.symbol }}</span>
+             <span :class="getPnLClass(trade.pnl)">{{ formatCurrency(trade.pnl) }}</span>
+          </div>
+          <div v-if="tooltip.day.trades.length > 5" class="tooltip-more">
+             +{{ tooltip.day.trades.length - 5 }} more
+          </div>
         </div>
       </div>
-    </div>
+    </Teleport>
     <h3 class="mb-md">{{ title }}</h3>
     <p class="subtitle mb-lg">{{ subtitle }}</p>
     
@@ -49,6 +51,7 @@
           :key="index"
           :class="['day-cell', `intensity-${day.intensity}`, day.color]"
           @mouseenter="showTooltip($event, day)"
+          @mouseleave="hideTooltip"
           @click="selectDay(day)"
         >
         </div>
@@ -151,12 +154,21 @@ export default {
       if (day.tradeCount === 0) return;
       
       const cellRect = event.target.getBoundingClientRect();
-      // Calculate position relative to container or viewport
-      // Using simple offset implementation
+      const tooltipWidth = 200; // Estimated width
+      const windowWidth = window.innerWidth;
+      
+      let x = cellRect.right + 10;
+      let y = cellRect.top - 10;
+      
+      // Check if tooltip goes off right edge
+      if (x + tooltipWidth > windowWidth) {
+        x = cellRect.left - tooltipWidth - 10;
+      }
+      
       tooltip.value = {
         visible: true,
-        x: cellRect.right + 10, // Position to right of cell
-        y: cellRect.top - 10,  // Slightly elevated
+        x,
+        y,
         day: day,
       };
     };
@@ -195,7 +207,7 @@ export default {
 
 .custom-tooltip {
   position: fixed; /* Fixed to viewport to avoid overflow issues */
-  z-index: 1000;
+  z-index: 9999;
   background: var(--glass-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);

@@ -6,8 +6,8 @@
       <p>Deep dive into your trading performance and statistics</p>
     </div>
 
-    <!-- Streak Statistics -->
-    <div class="grid grid-cols-3 mb-xl">
+    <!-- Streak & Risk Statistics -->
+    <div class="grid grid-cols-4 mb-xl">
       <StatsCard
         label="Current Streak"
         :value="currentStreakInfo.count"
@@ -31,6 +31,14 @@
         icon="❄️"
         iconBg="var(--gradient-danger)"
         subtitle="Worst losing run"
+      />
+      <StatsCard
+        label="Max Drawdown"
+        :value="'-' + formatCurrency(maxDrawdown).replace('$', '')"
+        valueClass="loss"
+        icon="📉"
+        iconBg="var(--gradient-danger)"
+        subtitle="Largest peak-to-trough drop"
       />
     </div>
 
@@ -89,7 +97,10 @@ import {
   getWorstTrade,
   calculateStreaks,
   getCurrentStreak,
+  calculateMaxDrawdown,
 } from '../utils/calculations';
+
+import { formatCurrency } from '../utils/formatters';
 
 export default {
   name: 'Analytics',
@@ -120,12 +131,17 @@ export default {
     // Streak statistics
     const streakStats = computed(() => calculateStreaks(closedTrades.value));
     const currentStreakInfo = computed(() => getCurrentStreak(closedTrades.value));
+    
+    // Risk metrics
+    const maxDrawdown = computed(() => calculateMaxDrawdown(closedTrades.value));
 
     return {
       bestTrade,
       worstTrade,
       streakStats,
       currentStreakInfo,
+      maxDrawdown,
+      formatCurrency,
     };
   },
 };
