@@ -35,6 +35,30 @@
         </select>
       </div>
 
+      <!-- Date Range Filters -->
+      <div class="date-filters mt-md">
+        <div class="date-filter-group">
+          <label for="startDate" class="date-label">From Date</label>
+          <input
+            id="startDate"
+            v-model="startDate"
+            type="date"
+            class="input date-input"
+            placeholder="Start date"
+          />
+        </div>
+        <div class="date-filter-group">
+          <label for="endDate" class="date-label">To Date</label>
+          <input
+            id="endDate"
+            v-model="endDate"
+            type="date"
+            class="input date-input"
+            placeholder="End date"
+          />
+        </div>
+      </div>
+
       <button v-if="hasActiveFilters" @click="clearFilters" class="btn btn-secondary mt-md">
         Clear Filters
       </button>
@@ -148,6 +172,8 @@ export default {
     const statusFilter = ref('');
     const symbolFilter = ref('');
     const strategyFilter = ref('');
+    const startDate = ref('');
+    const endDate = ref('');
     const sortColumn = ref('entry_timestamp');
     const sortDirection = ref('desc');
     const selectedTrade = ref(null);
@@ -190,6 +216,25 @@ export default {
         result = result.filter((t) => t.strategy_name === strategyFilter.value);
       }
 
+      // Date range filter
+      if (startDate.value) {
+        const start = new Date(startDate.value);
+        start.setHours(0, 0, 0, 0);
+        result = result.filter((t) => {
+          const tradeDate = t.entry_timestamp?.toDate?.() || new Date(t.entry_timestamp);
+          return tradeDate >= start;
+        });
+      }
+
+      if (endDate.value) {
+        const end = new Date(endDate.value);
+        end.setHours(23, 59, 59, 999);
+        result = result.filter((t) => {
+          const tradeDate = t.entry_timestamp?.toDate?.() || new Date(t.entry_timestamp);
+          return tradeDate <= end;
+        });
+      }
+
       // Sort
       result.sort((a, b) => {
         let aVal = a[sortColumn.value];
@@ -228,7 +273,9 @@ export default {
         searchQuery.value ||
         statusFilter.value ||
         symbolFilter.value ||
-        strategyFilter.value
+        strategyFilter.value ||
+        startDate.value ||
+        endDate.value
       );
     });
 
@@ -246,6 +293,8 @@ export default {
       statusFilter.value = '';
       symbolFilter.value = '';
       strategyFilter.value = '';
+      startDate.value = '';
+      endDate.value = '';
     };
 
     const getPnLClass = (pnl) => {
@@ -262,6 +311,8 @@ export default {
       statusFilter,
       symbolFilter,
       strategyFilter,
+      startDate,
+      endDate,
       sortColumn,
       sortDirection,
       selectedTrade,
@@ -297,6 +348,30 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--spacing-md);
+}
+
+.date-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.date-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.date-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.date-input {
+  cursor: pointer;
 }
 
 .table-container {
