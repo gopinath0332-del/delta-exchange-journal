@@ -52,6 +52,34 @@
       <TimeAnalysis :trades="trades" />
     </div>
 
+    <!-- Performance Ratio Metrics -->
+    <div class="grid grid-cols-3 mb-xl">
+      <StatsCard
+        label="Win Rate"
+        :value="formatPercentage(winRate)"
+        :valueClass="winRate >= 50 ? 'profit' : 'loss'"
+        icon="🎯"
+        :iconBg="winRate >= 50 ? 'var(--gradient-success)' : 'var(--gradient-danger)'"
+        subtitle="Percentage of profitable trades"
+      />
+      <StatsCard
+        label="Profit Factor"
+        :value="profitFactor.toFixed(2)"
+        :valueClass="profitFactor >= 1.5 ? 'profit' : profitFactor >= 1 ? 'neutral' : 'loss'"
+        icon="💰"
+        :iconBg="profitFactor >= 1.5 ? 'var(--gradient-success)' : profitFactor >= 1 ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' : 'var(--gradient-danger)'"
+        subtitle="Gross Profit / Gross Loss"
+      />
+      <StatsCard
+        label="Risk/Reward"
+        :value="riskRewardRatio.toFixed(2)"
+        :valueClass="riskRewardRatio >= 1.5 ? 'profit' : riskRewardRatio >= 1 ? 'neutral' : 'loss'"
+        icon="⚖️"
+        :iconBg="riskRewardRatio >= 1.5 ? 'var(--gradient-success)' : riskRewardRatio >= 1 ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' : 'var(--gradient-danger)'"
+        subtitle="Avg Win / Avg Loss"
+      />
+    </div>
+
     <!-- Charts Section -->
     <div class="grid grid-cols-2 mb-xl">
       <!-- PnL Chart -->
@@ -98,9 +126,12 @@ import {
   calculateStreaks,
   getCurrentStreak,
   calculateMaxDrawdown,
+  calculateWinRate,
+  calculateRiskRewardRatio,
+  calculateProfitFactor,
 } from '../utils/calculations';
 
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, formatPercentage } from '../utils/formatters';
 
 export default {
   name: 'Analytics',
@@ -135,13 +166,22 @@ export default {
     // Risk metrics
     const maxDrawdown = computed(() => calculateMaxDrawdown(closedTrades.value));
 
+    // Performance Ratios
+    const winRate = computed(() => calculateWinRate(closedTrades.value));
+    const riskRewardRatio = computed(() => calculateRiskRewardRatio(closedTrades.value));
+    const profitFactor = computed(() => calculateProfitFactor(closedTrades.value));
+
     return {
       bestTrade,
       worstTrade,
       streakStats,
       currentStreakInfo,
       maxDrawdown,
+      winRate,
+      riskRewardRatio,
+      profitFactor,
       formatCurrency,
+      formatPercentage,
     };
   },
 };

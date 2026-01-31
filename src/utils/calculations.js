@@ -449,3 +449,38 @@ export function calculateMaxDrawdown(trades) {
   return maxDrawdown;
 }
 
+/**
+ * Calculate Realized Risk/Reward Ratio (Avg Win / Avg Loss)
+ * @param {Array} trades - Array of trade objects
+ * @returns {number} Risk Reward Ratio (e.g. 1.5)
+ */
+export function calculateRiskRewardRatio(trades) {
+  const avgWin = calculateAverageProfit(trades);
+  const avgLoss = calculateAverageLoss(trades);
+  
+  if (avgLoss === 0) return avgWin > 0 ? 100 : 0; // Infinite or zero
+  
+  return Math.abs(avgWin / avgLoss);
+}
+
+/**
+ * Calculate Profit Factor (Gross Profit / Gross Loss)
+ * @param {Array} trades - Array of trade objects
+ * @returns {number} Profit Factor
+ */
+export function calculateProfitFactor(trades) {
+  const closedTrades = trades.filter(t => t.status === 'CLOSED');
+  
+  const grossProfit = closedTrades
+    .filter(t => (t.pnl || 0) > 0)
+    .reduce((sum, t) => sum + t.pnl, 0);
+    
+  const grossLoss = closedTrades
+    .filter(t => (t.pnl || 0) < 0)
+    .reduce((sum, t) => sum + Math.abs(t.pnl), 0);
+    
+  if (grossLoss === 0) return grossProfit > 0 ? 100 : 0;
+  
+  return grossProfit / grossLoss;
+}
+

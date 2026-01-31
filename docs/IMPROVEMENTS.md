@@ -15,10 +15,10 @@ This document outlines potential enhancements and features to improve the tradin
 
 ### 2. Advanced Analytics
 
-- [ ] **Profit Factor** - Ratio of gross profit to gross loss
+- [x] **Profit Factor** - Ratio of gross profit to gross loss ✅ **IMPLEMENTED**
 - [ ] **Sharpe Ratio** - Risk-adjusted return metric
 - [x] **Maximum Drawdown** - Largest peak-to-trough decline ✅ **IMPLEMENTED**
-- [ ] **R-Multiple Analysis** - Risk/reward ratio tracking
+- [x] **R-Multiple Analysis** - Risk/reward ratio tracking ✅ **IMPLEMENTED**
 - [x] **Monthly/Weekly Performance** - Calendar heatmap view ✅ **IMPLEMENTED**
 - [x] **Time-based Analysis** - Performance by day of week, hour of day ✅ **IMPLEMENTED**
 - [x] **Consecutive Wins/Losses** - Track streaks ✅ **IMPLEMENTED**
