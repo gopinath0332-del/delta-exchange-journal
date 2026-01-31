@@ -359,3 +359,56 @@ export function calculateDailyPerformance(trades, daysToShow = 365) {
   return result;
 }
 
+/**
+ * Calculate performance metrics by time (Day of Week, Hour of Day)
+ * @param {Array} trades - Array of trade objects
+ * @returns {Object} { byDay: Array, byHour: Array }
+ */
+export function calculateTimeBasedPerformance(trades) {
+  const closedTrades = trades.filter((t) => t.status === 'CLOSED');
+  
+  // Initialize buckets
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const dayBuckets = days.map(day => ({ name: day, pnl: 0, wins: 0, total: 0 }));
+  const hourBuckets = Array(24).fill(0).map((_, i) => ({ 
+    hour: i, 
+    label: `${i.toString().padStart(2, '0')}:00`, 
+    pnl: 0, 
+    wins: 0, 
+    total: 0 
+  }));
+
+  closedTrades.forEach(trade => {
+    const exitDate = trade.exit_timestamp?.toDate?.() || new Date(trade.exit_timestamp);
+    const dayIndex = exitDate.getDay(); // 0 = Sunday
+    const hourIndex = exitDate.getHours(); // 0-23
+
+    // Update Day Bucket
+    dayBuckets[dayIndex].pnl += trade.pnl || 0;
+    dayBuckets[dayIndex].total += 1;
+    if ((trade.pnl || 0) > 0) dayBuckets[dayIndex].wins += 1;
+
+    // Update Hour Bucket
+    hourBuckets[hourIndex].pnl += trade.pnl || 0;
+    hourBuckets[hourIndex].total += 1;
+    if ((trade.pnl || 0) > 0) hourBuckets[hourIndex].wins += 1;
+  });
+
+  // Calculate Win Rates and format final data
+  const byDay = dayBuckets.map(d => ({
+    ...d,
+    winRate: d.total > 0 ? (d.wins / d.total) * 100 : 0
+  }));
+
+  // For chart display, maybe better to start with Monday?
+  // Let's rotate so Monday is first (Index 1)
+  const byDaySorted = [...byDay.slice(1), byDay[0]];
+
+  const byHour = hourBuckets.map(h => ({
+    ...h,
+    winRate: h.total > 0 ? (h.wins / h.total) * 100 : 0
+  }));
+
+  return { byDay: byDaySorted, byHour };
+}
+

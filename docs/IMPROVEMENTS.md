@@ -20,7 +20,7 @@ This document outlines potential enhancements and features to improve the tradin
 - [ ] **Maximum Drawdown** - Largest peak-to-trough decline
 - [ ] **R-Multiple Analysis** - Risk/reward ratio tracking
 - [x] **Monthly/Weekly Performance** - Calendar heatmap view ✅ **IMPLEMENTED**
-- [ ] **Time-based Analysis** - Performance by day of week, hour of day
+- [x] **Time-based Analysis** - Performance by day of week, hour of day ✅ **IMPLEMENTED**
 - [x] **Consecutive Wins/Losses** - Track streaks ✅ **IMPLEMENTED**
 
 ### 3. Export & Reporting

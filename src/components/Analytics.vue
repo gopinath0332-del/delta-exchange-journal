@@ -39,6 +39,11 @@
       <CalendarHeatmap :trades="trades" />
     </div>
 
+    <!-- Time Analysis -->
+    <div class="mb-xl">
+      <TimeAnalysis :trades="trades" />
+    </div>
+
     <!-- Charts Section -->
     <div class="grid grid-cols-2 mb-xl">
       <!-- PnL Chart -->
@@ -78,6 +83,7 @@ import TradeCard from './TradeCard.vue';
 import PnLChart from './PnLChart.vue';
 import StrategyPerformance from './StrategyPerformance.vue';
 import CalendarHeatmap from './CalendarHeatmap.vue';
+import TimeAnalysis from './TimeAnalysis.vue';
 import {
   getBestTrade,
   getWorstTrade,
@@ -93,6 +99,7 @@ export default {
     PnLChart,
     StrategyPerformance,
     CalendarHeatmap,
+    TimeAnalysis,
   },
   props: {
     trades: {
