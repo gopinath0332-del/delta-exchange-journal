@@ -281,3 +281,81 @@ export function getCurrentStreak(trades) {
   };
 }
 
+/**
+ * Calculate daily performance data for calendar heatmap
+ * @param {Array} trades - Array of trade objects
+ * @param {number} daysToShow - Number of days to show (default 365)
+ * @returns {Array} Array of {date, pnl, tradeCount, color, trades} objects
+ */
+export function calculateDailyPerformance(trades, daysToShow = 365) {
+  const closedTrades = trades.filter((t) => t.status === 'CLOSED');
+  
+  // Create a map of date -> {pnl, count, trades}
+  const dailyData = {};
+  
+  closedTrades.forEach((trade) => {
+    const exitDate = trade.exit_timestamp?.toDate?.() || new Date(trade.exit_timestamp);
+    const dateKey = exitDate.toISOString().split('T')[0]; // YYYY-MM-DD
+    
+    if (!dailyData[dateKey]) {
+      dailyData[dateKey] = {
+        pnl: 0,
+        tradeCount: 0,
+        trades: [],
+      };
+    }
+    
+    dailyData[dateKey].pnl += trade.pnl || 0;
+    dailyData[dateKey].tradeCount += 1;
+    dailyData[dateKey].trades.push(trade);
+  });
+  
+  // Generate array for last N days
+  const result = [];
+  const today = new Date();
+  
+  for (let i = daysToShow - 1; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    const dateKey = date.toISOString().split('T')[0];
+    
+    const dayData = dailyData[dateKey] || { pnl: 0, tradeCount: 0, trades: [] };
+    
+    // Determine color intensity based on PnL
+    let color = 'neutral';
+    let intensity = 0;
+    
+    if (dayData.tradeCount > 0) {
+      if (dayData.pnl > 0) {
+        color = 'profit';
+        // Scale intensity based on PnL (you can adjust these thresholds)
+        if (dayData.pnl > 500) intensity = 4;
+        else if (dayData.pnl > 200) intensity = 3;
+        else if (dayData.pnl > 50) intensity = 2;
+        else intensity = 1;
+      } else if (dayData.pnl < 0) {
+        color = 'loss';
+        if (dayData.pnl < -500) intensity = 4;
+        else if (dayData.pnl < -200) intensity = 3;
+        else if (dayData.pnl < -50) intensity = 2;
+        else intensity = 1;
+      } else {
+        color = 'neutral';
+        intensity = 1;
+      }
+    }
+    
+    result.push({
+      date,
+      dateKey,
+      pnl: dayData.pnl,
+      tradeCount: dayData.tradeCount,
+      trades: dayData.trades,
+      color,
+      intensity,
+    });
+  }
+  
+  return result;
+}
+

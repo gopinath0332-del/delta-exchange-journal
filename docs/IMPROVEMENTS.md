@@ -19,7 +19,7 @@ This document outlines potential enhancements and features to improve the tradin
 - [ ] **Sharpe Ratio** - Risk-adjusted return metric
 - [ ] **Maximum Drawdown** - Largest peak-to-trough decline
 - [ ] **R-Multiple Analysis** - Risk/reward ratio tracking
-- [ ] **Monthly/Weekly Performance** - Calendar heatmap view
+- [x] **Monthly/Weekly Performance** - Calendar heatmap view ✅ **IMPLEMENTED**
 - [ ] **Time-based Analysis** - Performance by day of week, hour of day
 - [x] **Consecutive Wins/Losses** - Track streaks ✅ **IMPLEMENTED**
 
