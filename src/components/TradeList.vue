@@ -171,7 +171,7 @@ export default {
     const searchQuery = ref('');
     const statusFilter = ref('');
     const symbolFilter = ref('');
-    const strategyFilter = ref('');
+    const strategyFilter = ref('donchian_channel');
     const startDate = ref('');
     const endDate = ref('');
     const sortColumn = ref('entry_timestamp');
@@ -292,7 +292,7 @@ export default {
       searchQuery.value = '';
       statusFilter.value = '';
       symbolFilter.value = '';
-      strategyFilter.value = '';
+      strategyFilter.value = 'donchian_channel';
       startDate.value = '';
       endDate.value = '';
     };
