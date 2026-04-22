@@ -1,14 +1,24 @@
 <template>
   <div class="pnl-chart">
     <div class="chart-header">
-      <div class="filter-group">
-        <label for="monthFilter">Filter Month</label>
-        <select v-model="selectedMonth" id="monthFilter" class="select select-sm">
-          <option value="all">All Time</option>
-          <option v-for="month in months" :key="month.value" :value="month.value">
-            {{ month.label }}
-          </option>
-        </select>
+      <div class="filters-row">
+        <div class="filter-group">
+          <label for="yearFilter">Year</label>
+          <select v-model="selectedYear" id="yearFilter" class="select select-sm">
+            <option v-for="year in years" :key="year" :value="year">
+              {{ year }}
+            </option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="monthFilter">Month</label>
+          <select v-model="selectedMonth" id="monthFilter" class="select select-sm">
+            <option value="all">All Months</option>
+            <option v-for="month in months" :key="month.value" :value="month.value">
+              {{ month.label }}
+            </option>
+          </select>
+        </div>
       </div>
     </div>
     <canvas ref="chartCanvas"></canvas>
@@ -34,28 +44,69 @@ export default {
     const chartCanvas = ref(null);
     let chartInstance = null;
 
+    const selectedYear = ref(new Date().getFullYear());
     const selectedMonth = ref('all');
 
+    const years = computed(() => {
+      const currentYear = new Date().getFullYear();
+      const yearsList = [];
+      for (let i = 0; i < 5; i++) {
+        yearsList.push(currentYear - i);
+      }
+      return yearsList;
+    });
+
     const months = computed(() => {
-      const now = new Date();
+      const activeMonths = new Set();
+
+      props.trades.forEach(trade => {
+        const date = trade.entry_timestamp?.toDate?.() || new Date(trade.entry_timestamp);
+        if (date.getFullYear() === selectedYear.value) {
+          activeMonths.add(date.getMonth());
+        }
+      });
+
       const result = [];
       for (let i = 0; i < 12; i++) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        result.push({
-          value: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
-          label: d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-        });
+        if (activeMonths.has(i)) {
+          const d = new Date(2000, i, 1);
+          result.push({
+            value: String(i + 1).padStart(2, '0'),
+            label: d.toLocaleDateString('en-US', { month: 'long' })
+          });
+        }
       }
       return result;
     });
 
-    const filteredTrades = computed(() => {
-      if (selectedMonth.value === 'all') return props.trades;
+    // Effect to handle default month selection based on current date and data availability
+    watch([() => props.trades, selectedYear], () => {
+      const now = new Date();
+      const currentMonthVal = String(now.getMonth() + 1).padStart(2, '0');
 
+      // Check if current month has data in the selected year
+      const hasCurrentMonth = months.value.some(m => m.value === currentMonthVal);
+
+      if (hasCurrentMonth) {
+        selectedMonth.value = currentMonthVal;
+      } else if (months.value.length > 0) {
+        // Select the most recent month available in the list (last item in the chronological list)
+        selectedMonth.value = months.value[months.value.length - 1].value;
+      } else {
+        selectedMonth.value = 'all';
+      }
+    }, { immediate: true });
+
+    const filteredTrades = computed(() => {
       return props.trades.filter(trade => {
         const date = trade.entry_timestamp?.toDate?.() || new Date(trade.entry_timestamp);
-        const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        return monthYear === selectedMonth.value;
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+
+        const matchYear = year === selectedYear.value;
+        const matchMonth = selectedMonth.value === 'all' || month === selectedMonth.value;
+
+        return matchYear && matchMonth;
       });
     });
 
@@ -69,9 +120,11 @@ export default {
       const cumulativeData = calculateCumulativePnL(filteredTrades.value);
 
       if (cumulativeData.length === 0) {
+        // Optionally clear the canvas or show "No Data"
         return;
       }
 
+      // Only display labels for months that actually have data
       const labels = cumulativeData.map((d) =>
         d.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
       );
@@ -177,13 +230,22 @@ export default {
       { deep: true }
     );
 
-    watch(selectedMonth, () => {
+    watch([selectedYear, selectedMonth], ([newYear, newMonth]) => {
+      // If the selected month is no longer available in the new year's data, reset to 'all'
+      if (newMonth !== 'all') {
+        const hasMonth = months.value.some(m => m.value === newMonth);
+        if (!hasMonth) {
+          selectedMonth.value = 'all';
+        }
+      }
       createChart();
     });
 
     return {
       chartCanvas,
+      selectedYear,
       selectedMonth,
+      years,
       months,
     };
   },
@@ -200,6 +262,11 @@ export default {
   display: flex;
   justify-content: flex-end;
   margin-bottom: var(--spacing-md);
+}
+
+.filters-row {
+  display: flex;
+  gap: var(--spacing-md);
 }
 
 .filter-group {
