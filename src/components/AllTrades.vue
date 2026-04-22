@@ -35,7 +35,51 @@ export default {
 
     onMounted(() => {
       unsubscribe = subscribeToTrades((newTrades) => {
-        trades.value = newTrades;
+        const grouped = {};
+
+        newTrades.forEach(trade => {
+          // Since separate documents for Entry and Exit likely have DIFFERENT IDs,
+          // using trade.id as a key will not merge them.
+          // We need a key that is shared between the Entry and Exit record.
+          // Common candidates: a custom trade_id, or symbol + strategy + timestamp approximation.
+
+          let key = trade.trade_id;
+
+          if (!key) {
+            // Fallback: combine symbol, strategy, and a rounded entry timestamp to group
+            // the entry and exit together if they happened in the same window.
+            const symbol = trade.symbol || 'unknown';
+            const strategy = trade.strategy_name || 'unknown';
+            const timestamp = trade.entry_timestamp;
+
+            let dateKey = 'no-date';
+            if (timestamp) {
+              const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+              // Round to the nearest hour to account for slight differences in record timing
+              dateKey = new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours()).toISOString();
+            }
+
+            key = `${symbol}-${strategy}-${dateKey}`;
+          }
+
+          if (!grouped[key]) {
+            grouped[key] = trade;
+          } else {
+            const existing = grouped[key];
+            // Merge: CLOSED status always wins, and we combine all fields
+            if (trade.status === 'CLOSED' || existing.status === 'CLOSED') {
+              grouped[key] = {
+                ...existing,
+                ...trade,
+                status: 'CLOSED'
+              };
+            } else {
+              grouped[key] = { ...existing, ...trade };
+            }
+          }
+        });
+
+        trades.value = Object.values(grouped);
         loading.value = false;
       });
     });
