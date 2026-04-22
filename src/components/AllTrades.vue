@@ -3,6 +3,7 @@
     <div class="page-header mb-xl">
       <h2>All Trades</h2>
       <p>Complete history of your trading activity</p>
+      <div class="total-count">Total Trades: {{ trades.length }}</div>
     </div>
 
     <!-- Loading State -->
@@ -118,6 +119,13 @@ export default {
 .page-header p {
   color: var(--color-text-tertiary);
   font-size: var(--font-size-lg);
+}
+
+.total-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-xs);
+  font-weight: 500;
 }
 
 .loading-container {
