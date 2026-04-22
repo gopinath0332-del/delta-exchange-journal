@@ -13,7 +13,6 @@
         <div class="filter-group">
           <label for="monthFilter">Month</label>
           <select v-model="selectedMonth" id="monthFilter" class="select select-sm">
-            <option value="all">All Months</option>
             <option v-for="month in months" :key="month.value" :value="month.value">
               {{ month.label }}
             </option>
@@ -48,12 +47,14 @@ export default {
     const selectedMonth = ref('all');
 
     const years = computed(() => {
-      const currentYear = new Date().getFullYear();
-      const yearsList = [];
-      for (let i = 0; i < 5; i++) {
-        yearsList.push(currentYear - i);
-      }
-      return yearsList;
+      const activeYears = new Set();
+
+      props.trades.forEach(trade => {
+        const date = trade.entry_timestamp?.toDate?.() || new Date(trade.entry_timestamp);
+        activeYears.add(date.getFullYear());
+      });
+
+      return Array.from(activeYears).sort((a, b) => b - a);
     });
 
     const months = computed(() => {
@@ -82,15 +83,22 @@ export default {
     // Effect to handle default month selection based on current date and data availability
     watch([() => props.trades, selectedYear], () => {
       const now = new Date();
+      const currentYear = now.getFullYear();
       const currentMonthVal = String(now.getMonth() + 1).padStart(2, '0');
 
-      // Check if current month has data in the selected year
+      // 1. Handle Year Default: Current Year if data exists, else most recent year with data
+      if (!years.value.includes(selectedYear.value)) {
+        if (years.value.length > 0) {
+          selectedYear.value = years.value[0]; // Sorted desc, so [0] is most recent
+        }
+      }
+
+      // 2. Handle Month Default
       const hasCurrentMonth = months.value.some(m => m.value === currentMonthVal);
 
       if (hasCurrentMonth) {
         selectedMonth.value = currentMonthVal;
       } else if (months.value.length > 0) {
-        // Select the most recent month available in the list (last item in the chronological list)
         selectedMonth.value = months.value[months.value.length - 1].value;
       } else {
         selectedMonth.value = 'all';
