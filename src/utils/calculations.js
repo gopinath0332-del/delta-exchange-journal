@@ -189,7 +189,83 @@ export function calculatePnLBySymbol(trades) {
 }
 
 /**
+ * Calculate detailed performance metrics broken down by month
+ * @param {Array} trades - Array of trade objects (already filtered by year)
+ * @returns {Array} Array of 12 month statistics objects
+ */
+export function calculateMonthlyBreakdown(trades) {
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  // Initialize 12 months with zeroed stats
+  const monthlyStats = monthNames.map((name, index) => ({
+    month: name,
+    monthIndex: index,
+    tradeCount: 0,
+    pnl: 0,
+    wins: 0,
+    losses: 0,
+    funding: 0,
+    fees: 0,
+    winningTrades: [],
+    losingTrades: [],
+  }));
+
+  const closedTrades = trades.filter(t => t.status === 'CLOSED' && typeof t.pnl === 'number');
+
+  closedTrades.forEach(trade => {
+    const exitDate = trade.exit_timestamp?.toDate?.() || new Date(trade.exit_timestamp);
+    const monthIndex = exitDate.getMonth();
+
+    if (monthIndex >= 0 && monthIndex < 12) {
+      const stats = monthlyStats[monthIndex];
+      stats.tradeCount += 1;
+      stats.pnl += trade.pnl;
+      stats.funding += (trade.funding_charges || 0);
+      stats.fees += (trade.trading_fees || 0);
+
+      if (trade.pnl > 0) {
+        stats.wins += 1;
+        stats.winningTrades.push(trade);
+      } else if (trade.pnl < 0) {
+        stats.losses += 1;
+        stats.losingTrades.push(trade);
+      }
+    }
+  });
+
+  // Calculate derived metrics for each month
+  return monthlyStats.map(stats => {
+    const winRate = stats.tradeCount > 0 ? (stats.wins / stats.tradeCount) * 100 : 0;
+    const avgPnL = stats.tradeCount > 0 ? stats.pnl / stats.tradeCount : 0;
+
+    // Calculate R:R for the month
+    let rrRatio = 0;
+    if (stats.winningTrades.length > 0 && stats.losingTrades.length > 0) {
+      const avgWin = stats.winningTrades.reduce((sum, t) => sum + t.pnl, 0) / stats.winningTrades.length;
+      const avgLoss = stats.losingTrades.reduce((sum, t) => sum + t.pnl, 0) / stats.losingTrades.length;
+      rrRatio = Math.abs(avgWin / avgLoss);
+    } else if (stats.winningTrades.length > 0 && stats.losingTrades.length === 0) {
+      rrRatio = 100; // High R:R if no losses
+    }
+
+    return {
+      ...stats,
+      winRate,
+      avgPnL,
+      rrRatio,
+      // Remove temporary arrays used for R:R calculation
+      winningTrades: undefined,
+      losingTrades: undefined,
+    };
+  });
+}
+
+/**
  * Calculate total fees paid
+
 
  * @param {Array} trades - Array of trade objects
  * @returns {number} Total fees
