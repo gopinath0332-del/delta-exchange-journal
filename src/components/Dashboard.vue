@@ -93,26 +93,8 @@
         </div>
         <TradeList :trades="recentTrades" :limit="5" />
       </div>
-
-      <!-- Quick Links to Other Views -->
-      <div class="grid grid-cols-2 mb-xl mt-xl">
-        <router-link to="/analytics" class="glass-card p-xl hover-lift" style="text-decoration: none; color: inherit;">
-          <div class="quick-link-card">
-            <div class="icon-large">📊</div>
-            <h3>View Analytics</h3>
-            <p class="text-muted">Deep dive into performance metrics and charts</p>
-          </div>
-        </router-link>
-        <router-link to="/trades" class="glass-card p-xl hover-lift" style="text-decoration: none; color: inherit;">
-          <div class="quick-link-card">
-            <div class="icon-large">📋</div>
-            <h3>All Trades</h3>
-            <p class="text-muted">Browse complete trading history</p>
-          </div>
-        </router-link>
-      </div>
-  </div>
-</template>
+    </div>
+  </template>
 
 <script>
 import MonthlyBreakdownCard from './MonthlyBreakdownCard.vue';
