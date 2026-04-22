@@ -172,8 +172,13 @@ export default {
     const statusFilter = ref('');
     const symbolFilter = ref('');
     const strategyFilter = ref('donchian_channel');
-    const startDate = ref('');
-    const endDate = ref('');
+    const startDate = ref((() => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      return `${year}-${month}-01`;
+    })());
+    const endDate = ref(new Date().toISOString().split('T')[0]);
     const sortColumn = ref('entry_timestamp');
     const sortDirection = ref('desc');
     const selectedTrade = ref(null);
