@@ -20,142 +20,80 @@
 
     <!-- Key Stats Grid -->
       <div class="space-y-xl mb-xl">
-        <!-- Daily Performance -->
-        <div>
-          <h3 class="text-muted mb-md">Daily Performance</h3>
-          <div class="grid grid-cols-4">
-            <StatsCard
-              label="Total Trading Days"
-              :value="dailyStats.tradingDays"
-              icon="📅"
-              iconBg="var(--gradient-primary)"
-            />
-            <StatsCard
-              label="Winning Days"
-              :value="dailyStats.winningDays"
-              valueClass="profit"
-              icon="☀️"
-              iconBg="var(--gradient-success)"
-            />
-            <StatsCard
-              label="Loss Days"
-              :value="dailyStats.lossDays"
-              valueClass="loss"
-              icon="🌧️"
-              iconBg="var(--gradient-danger)"
-            />
-            <StatsCard
-              label="Avg Daily PnL"
-              :value="formatCurrency(dailyStats.avgDailyPnL)"
-              :valueClass="dailyStats.avgDailyPnL >= 0 ? 'profit' : 'loss'"
-              icon="📈"
-              :iconBg="dailyStats.avgDailyPnL >= 0 ? 'var(--gradient-success)' : 'var(--gradient-danger)'"
-            />
-          </div>
+        <!-- Hero Row: Always Visible -->
+        <div class="grid grid-cols-4">
+          <StatsCard
+            label="Net PnL"
+            :value="formatCurrency(totalPnL)"
+            :valueClass="totalPnL >= 0 ? 'profit' : 'loss'"
+            icon="💰"
+            :iconBg="totalPnL >= 0 ? 'var(--gradient-success)' : 'var(--gradient-danger)'"
+          />
+          <StatsCard
+            label="Win Rate"
+            :value="formatPercentage(winRate)"
+            valueClass="profit"
+            icon="🎯"
+            iconBg="var(--gradient-primary)"
+          />
+          <StatsCard
+            label="Total Trades"
+            :value="totalClosedTrades"
+            icon="📈"
+            iconBg="linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)"
+          />
+          <StatsCard
+            label="Avg Daily PnL"
+            :value="formatCurrency(dailyStats.avgDailyPnL)"
+            :valueClass="dailyStats.avgDailyPnL >= 0 ? 'profit' : 'loss'"
+            icon="📊"
+            :iconBg="dailyStats.avgDailyPnL >= 0 ? 'var(--gradient-success)' : 'var(--gradient-danger)'"
+          />
         </div>
 
-        <!-- Streaks & Consistency -->
-        <div>
-          <h3 class="text-muted mb-md">Streaks & Consistency</h3>
-          <div class="grid grid-cols-4">
-            <StatsCard
-              label="Max Win Streak"
-              :value="streaks.longestWinStreak"
-              valueClass="profit"
-              icon="🔥"
-              iconBg="var(--gradient-success)"
-            />
-            <StatsCard
-              label="Max Loss Streak"
-              :value="streaks.longestLossStreak"
-              valueClass="loss"
-              icon="❄️"
-              iconBg="var(--gradient-danger)"
-            />
-            <StatsCard
-              label="Win Rate"
-              :value="formatPercentage(winRate)"
-              valueClass="profit"
-              icon="🎯"
-              iconBg="var(--gradient-primary)"
-            />
-            <StatsCard
-              label="Net PnL"
-              :value="formatCurrency(totalPnL)"
-              :valueClass="totalPnL >= 0 ? 'profit' : 'loss'"
-              icon="💰"
-              :iconBg="totalPnL >= 0 ? 'var(--gradient-success)' : 'var(--gradient-danger)'"
-            />
+        <!-- Detailed Metrics Tabs -->
+        <div class="glass-card p-xl">
+          <div class="flex justify-center gap-sm mb-xl">
+            <button
+              @click="activeTab = 'daily'"
+              :class="['btn btn-secondary', activeTab === 'daily' ? 'active-tab' : '']"
+            >
+              Daily Performance
+            </button>
+            <button
+              @click="activeTab = 'consistency'"
+              :class="['btn btn-secondary', activeTab === 'consistency' ? 'active-tab' : '']"
+            >
+              Consistency
+            </button>
+            <button
+              @click="activeTab = 'financials'"
+              :class="['btn btn-secondary', activeTab === 'financials' ? 'active-tab' : '']"
+            >
+              Financials
+            </button>
           </div>
-        </div>
 
-        <!-- Gross Totals -->
-        <div>
-          <h3 class="text-muted mb-md">Gross Totals</h3>
-          <div class="grid grid-cols-4">
-            <StatsCard
-              label="Total Profit"
-              :value="formatCurrency(grossTotals.totalProfit)"
-              valueClass="profit"
-              icon="📈"
-              iconBg="var(--gradient-success)"
-            />
-            <StatsCard
-              label="Total Loss"
-              :value="formatCurrency(grossTotals.totalLoss)"
-              valueClass="loss"
-              icon="📉"
-              iconBg="var(--gradient-danger)"
-            />
-            <StatsCard
-              label="Max Profit Day"
-              :value="formatCurrency(dailyStats.maxProfitDay)"
-              valueClass="profit"
-              icon="🚀"
-              iconBg="var(--gradient-success)"
-            />
-            <StatsCard
-              label="Max Loss Day"
-              :value="formatCurrency(dailyStats.maxLossDay)"
-              valueClass="loss"
-              icon="⚠️"
-              iconBg="var(--gradient-danger)"
-            />
+          <div v-if="activeTab === 'daily'" class="grid grid-cols-4 gap-md">
+            <StatsCard label="Total Trading Days" :value="dailyStats.tradingDays" icon="📅" iconBg="var(--gradient-primary)" />
+            <StatsCard label="Winning Days" :value="dailyStats.winningDays" valueClass="profit" icon="☀️" iconBg="var(--gradient-success)" />
+            <StatsCard label="Loss Days" :value="dailyStats.lossDays" valueClass="loss" icon="🌧️" iconBg="var(--gradient-danger)" />
+            <StatsCard label="Max Profit Day" :value="formatCurrency(dailyStats.maxProfitDay)" valueClass="profit" icon="🚀" iconBg="var(--gradient-success)" />
+            <StatsCard label="Max Loss Day" :value="formatCurrency(dailyStats.maxLossDay)" valueClass="loss" icon="⚠️" iconBg="var(--gradient-danger)" />
           </div>
-        </div>
 
-        <!-- Cost Analysis -->
-        <div>
-          <h3 class="text-muted mb-md">Cost Analysis</h3>
-          <div class="grid grid-cols-4">
-            <StatsCard
-              label="Total Fees"
-              :value="formatCurrency(totalFees)"
-              valueClass="loss"
-              icon="💸"
-              iconBg="var(--gradient-danger)"
-            />
-            <StatsCard
-              label="Total Funding"
-              :value="formatCurrency(totalFunding)"
-              :valueClass="totalFunding >= 0 ? 'profit' : 'loss'"
-              icon="🏦"
-              iconBg="var(--gradient-primary)"
-            />
-            <StatsCard
-              label="Avg Profit/Day"
-              :value="formatCurrency(dailyAverages.avgProfitDay)"
-              valueClass="profit"
-              icon="📊"
-              iconBg="var(--gradient-success)"
-            />
-            <StatsCard
-              label="Avg Loss/Day"
-              :value="formatCurrency(dailyAverages.avgLossDay)"
-              valueClass="loss"
-              icon="📊"
-              iconBg="var(--gradient-danger)"
-            />
+          <div v-else-if="activeTab === 'consistency'" class="grid grid-cols-4 gap-md">
+            <StatsCard label="Max Win Streak" :value="streaks.longestWinStreak" valueClass="profit" icon="🔥" iconBg="var(--gradient-success)" />
+            <StatsCard label="Max Loss Streak" :value="streaks.longestLossStreak" valueClass="loss" icon="❄️" iconBg="var(--gradient-danger)" />
+            <StatsCard label="Avg Profit/Day" :value="formatCurrency(dailyAverages.avgProfitDay)" valueClass="profit" icon="📊" iconBg="var(--gradient-success)" />
+            <StatsCard label="Avg Loss/Day" :value="formatCurrency(dailyAverages.avgLossDay)" valueClass="loss" icon="📊" iconBg="var(--gradient-danger)" />
+          </div>
+
+          <div v-else-if="activeTab === 'financials'" class="grid grid-cols-4 gap-md">
+            <StatsCard label="Total Profit" :value="formatCurrency(grossTotals.totalProfit)" valueClass="profit" icon="📈" iconBg="var(--gradient-success)" />
+            <StatsCard label="Total Loss" :value="formatCurrency(grossTotals.totalLoss)" valueClass="loss" icon="📉" iconBg="var(--gradient-danger)" />
+            <StatsCard label="Total Fees" :value="formatCurrency(totalFees)" valueClass="loss" icon="💸" iconBg="var(--gradient-danger)" />
+            <StatsCard label="Total Funding" :value="formatCurrency(totalFunding)" :valueClass="totalFunding >= 0 ? 'profit' : 'loss'" icon="🏦" iconBg="var(--gradient-primary)" />
           </div>
         </div>
       </div>
@@ -243,6 +181,8 @@ export default {
   },
   setup(props) {
     const selectedYear = ref(new Date().getFullYear());
+    const activeTab = ref('daily');
+
 
     // Computed statistics
     const closedTrades = computed(() =>
@@ -308,6 +248,7 @@ export default {
 
     return {
       selectedYear,
+      activeTab,
       years,
       closedTrades,
       openTrades,
@@ -408,5 +349,11 @@ export default {
 
 .text-muted {
   color: var(--color-text-muted);
+}
+
+.active-tab {
+  background: var(--color-primary) !important;
+  color: white !important;
+  border-color: var(--color-primary) !important;
 }
 </style>
