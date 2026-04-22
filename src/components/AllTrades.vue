@@ -14,13 +14,34 @@
 
     <!-- Trades List -->
     <div v-else>
-      <TradeList :trades="trades" />
+      <div class="flex justify-center gap-sm mb-xl">
+        <button
+          @click="activeTab = 'all'"
+          :class="['btn btn-secondary', activeTab === 'all' ? 'active-tab' : '']"
+        >
+          All Trades ({{ trades.length }})
+        </button>
+        <button
+          @click="activeTab = 'open'"
+          :class="['btn btn-secondary', activeTab === 'open' ? 'active-tab' : '']"
+        >
+          Open Trades ({{ openTrades.length }})
+        </button>
+        <button
+          @click="activeTab = 'closed'"
+          :class="['btn btn-secondary', activeTab === 'closed' ? 'active-tab' : '']"
+        >
+          Closed Trades ({{ closedTrades.length }})
+        </button>
+      </div>
+
+      <TradeList :trades="filteredTrades" />
     </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import TradeList from './TradeList.vue';
 import { subscribeToTrades } from '../firebase/trades';
 
@@ -32,6 +53,7 @@ export default {
   setup() {
     const trades = ref([]);
     const loading = ref(true);
+    const activeTab = ref('all');
     let unsubscribe = null;
 
     onMounted(() => {
@@ -85,6 +107,15 @@ export default {
       });
     });
 
+    const openTrades = computed(() => trades.value.filter(t => t.status === 'OPEN'));
+    const closedTrades = computed(() => trades.value.filter(t => t.status === 'CLOSED'));
+
+    const filteredTrades = computed(() => {
+      if (activeTab.value === 'open') return openTrades.value;
+      if (activeTab.value === 'closed') return closedTrades.value;
+      return trades.value;
+    });
+
     onUnmounted(() => {
       if (unsubscribe) {
         unsubscribe();
@@ -94,6 +125,10 @@ export default {
     return {
       trades,
       loading,
+      activeTab,
+      openTrades,
+      closedTrades,
+      filteredTrades,
     };
   },
 };
@@ -126,6 +161,12 @@ export default {
   color: var(--color-text-secondary);
   margin-top: var(--spacing-xs);
   font-weight: 500;
+}
+
+.active-tab {
+  background: var(--color-primary) !important;
+  color: white !important;
+  border-color: var(--color-primary) !important;
 }
 
 .loading-container {
