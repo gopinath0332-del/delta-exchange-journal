@@ -6,6 +6,18 @@
       <p>Track, analyze, and improve your trading performance</p>
     </div>
 
+    <!-- Global Year Filter -->
+    <div class="global-filter-bar mb-xl">
+      <div class="filter-group">
+        <label for="globalYearFilter">Year</label>
+        <select v-model="selectedYear" id="globalYearFilter" class="select">
+          <option v-for="year in years" :key="year" :value="year">
+            {{ year }}
+          </option>
+        </select>
+      </div>
+    </div>
+
     <!-- Key Stats Grid -->
       <div class="grid grid-cols-4 mb-xl">
         <StatsCard
@@ -80,7 +92,7 @@
 </template>
 
 <script>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import StatsCard from './StatsCard.vue';
 import TradeList from './TradeList.vue';
 import PnLChart from './PnLChart.vue';
@@ -106,13 +118,17 @@ export default {
     },
   },
   setup(props) {
+    const selectedYear = ref(new Date().getFullYear());
+
     // Computed statistics
     const closedTrades = computed(() =>
-      props.trades.filter((t) => t.status === 'CLOSED')
+      props.trades.filter((t) => t.status === 'CLOSED' &&
+        (t.entry_timestamp?.toDate?.() || new Date(t.entry_timestamp)).getFullYear() === selectedYear.value)
     );
 
     const openTrades = computed(() =>
-      props.trades.filter((t) => t.status === 'OPEN')
+      props.trades.filter((t) => t.status === 'OPEN' &&
+        (t.entry_timestamp?.toDate?.() || new Date(t.entry_timestamp)).getFullYear() === selectedYear.value)
     );
 
     const totalClosedTrades = computed(() => closedTrades.value.length);
@@ -131,7 +147,11 @@ export default {
 
     const avgLoss = computed(() => calculateAverageLoss(closedTrades.value));
 
-    const recentTrades = computed(() => props.trades.slice(0, 5));
+    const recentTrades = computed(() =>
+      props.trades
+        .filter(t => (t.entry_timestamp?.toDate?.() || new Date(t.entry_timestamp)).getFullYear() === selectedYear.value)
+        .slice(0, 5)
+    );
 
     const overallPnLPercent = computed(() => {
       // Calculate overall PnL percentage based on total margin used
@@ -143,7 +163,18 @@ export default {
       return (totalPnL.value / totalMargin) * 100;
     });
 
+    const years = computed(() => {
+      const activeYears = new Set();
+      props.trades.forEach(trade => {
+        const date = trade.entry_timestamp?.toDate?.() || new Date(trade.entry_timestamp);
+        activeYears.add(date.getFullYear());
+      });
+      return Array.from(activeYears).sort((a, b) => b - a);
+    });
+
     return {
+      selectedYear,
+      years,
       closedTrades,
       openTrades,
       totalClosedTrades,
@@ -182,6 +213,24 @@ export default {
 .dashboard-header p {
   color: var(--color-text-tertiary);
   font-size: var(--font-size-lg);
+}
+
+.global-filter-bar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.filter-group label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .loading-container {

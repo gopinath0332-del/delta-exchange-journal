@@ -3,14 +3,6 @@
     <div class="chart-header">
       <div class="filters-row">
         <div class="filter-group">
-          <label for="yearFilter">Year</label>
-          <select v-model="selectedYear" id="yearFilter" class="select select-sm">
-            <option v-for="year in years" :key="year" :value="year">
-              {{ year }}
-            </option>
-          </select>
-        </div>
-        <div class="filter-group">
           <label for="monthFilter">Month</label>
           <select v-model="selectedMonth" id="monthFilter" class="select select-sm">
             <option v-for="month in months" :key="month.value" :value="month.value">
@@ -43,28 +35,15 @@ export default {
     const chartCanvas = ref(null);
     let chartInstance = null;
 
-    const selectedYear = ref(new Date().getFullYear());
     const selectedMonth = ref('all');
-
-    const years = computed(() => {
-      const activeYears = new Set();
-
-      props.trades.forEach(trade => {
-        const date = trade.entry_timestamp?.toDate?.() || new Date(trade.entry_timestamp);
-        activeYears.add(date.getFullYear());
-      });
-
-      return Array.from(activeYears).sort((a, b) => b - a);
-    });
 
     const months = computed(() => {
       const activeMonths = new Set();
 
       props.trades.forEach(trade => {
         const date = trade.entry_timestamp?.toDate?.() || new Date(trade.entry_timestamp);
-        if (date.getFullYear() === selectedYear.value) {
-          activeMonths.add(date.getMonth());
-        }
+        // Note: props.trades is already filtered by year from Dashboard.vue
+        activeMonths.add(date.getMonth());
       });
 
       const result = [];
@@ -81,17 +60,9 @@ export default {
     });
 
     // Effect to handle default month selection based on current date and data availability
-    watch([() => props.trades, selectedYear], () => {
+    watch([() => props.trades], () => {
       const now = new Date();
-      const currentYear = now.getFullYear();
       const currentMonthVal = String(now.getMonth() + 1).padStart(2, '0');
-
-      // 1. Handle Year Default: Current Year if data exists, else most recent year with data
-      if (!years.value.includes(selectedYear.value)) {
-        if (years.value.length > 0) {
-          selectedYear.value = years.value[0]; // Sorted desc, so [0] is most recent
-        }
-      }
 
       // 2. Handle Month Default
       const hasCurrentMonth = months.value.some(m => m.value === currentMonthVal);
@@ -107,14 +78,9 @@ export default {
 
     const filteredTrades = computed(() => {
       return props.trades.filter(trade => {
-        const date = trade.entry_timestamp?.toDate?.() || new Date(trade.entry_timestamp);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-
-        const matchYear = year === selectedYear.value;
+        const month = String((trade.entry_timestamp?.toDate?.() || new Date(trade.entry_timestamp)).getMonth() + 1).padStart(2, '0');
         const matchMonth = selectedMonth.value === 'all' || month === selectedMonth.value;
-
-        return matchYear && matchMonth;
+        return matchMonth;
       });
     });
 
@@ -238,22 +204,13 @@ export default {
       { deep: true }
     );
 
-    watch([selectedYear, selectedMonth], ([newYear, newMonth]) => {
-      // If the selected month is no longer available in the new year's data, reset to 'all'
-      if (newMonth !== 'all') {
-        const hasMonth = months.value.some(m => m.value === newMonth);
-        if (!hasMonth) {
-          selectedMonth.value = 'all';
-        }
-      }
+    watch([() => props.trades, selectedMonth], () => {
       createChart();
     });
 
     return {
       chartCanvas,
-      selectedYear,
       selectedMonth,
-      years,
       months,
     };
   },
