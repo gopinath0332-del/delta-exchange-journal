@@ -168,7 +168,29 @@ export function calculateCumulativePnL(trades) {
 }
 
 /**
+ * Calculate PnL aggregated by symbol
+ * @param {Array} trades - Array of trade objects
+ * @returns {Array} Array of { symbol, pnl } objects
+ */
+export function calculatePnLBySymbol(trades) {
+  const symbolMap = {};
+
+  trades.forEach((trade) => {
+    if (trade.status === 'CLOSED' && typeof trade.pnl === 'number') {
+      const symbol = trade.symbol || 'Unknown';
+      symbolMap[symbol] = (symbolMap[symbol] || 0) + trade.pnl;
+    }
+  });
+
+  return Object.entries(symbolMap).map(([symbol, pnl]) => ({
+    symbol,
+    pnl,
+  }));
+}
+
+/**
  * Calculate total fees paid
+
  * @param {Array} trades - Array of trade objects
  * @returns {number} Total fees
  */
