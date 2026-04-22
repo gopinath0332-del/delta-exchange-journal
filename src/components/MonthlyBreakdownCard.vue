@@ -15,21 +15,21 @@
             <th>W/L</th>
           </tr>
         </thead>
-        <tbody>
-          <tr v-for="month in data" :key="month.month" :class="{ 'month-empty': month.tradeCount === 0 }">
+        <tbody >
+          <tr v-for="month in data.filter(m => m.tradeCount > 0)" :key="month.month" :class="{ 'month-empty': month.tradeCount === 0 }">
             <td class="font-medium">{{ month.month }}</td>
-            <td class="text-center">{{ month.tradeCount }}</td>
-            <td class="text-center" :class="month.pnl >= 0 ? 'profit' : 'loss'">
+            <td>{{ month.tradeCount }}</td>
+            <td :class="month.pnl >= 0 ? 'profit' : 'loss'">
               {{ formatCurrency(month.pnl) }}
             </td>
-            <td class="text-center">{{ formatPercentage(month.winRate) }}</td>
-            <td class="text-center" :class="month.avgPnL >= 0 ? 'profit' : 'loss'">
+            <td>{{ formatPercentage(month.winRate) }}</td>
+            <td :class="month.avgPnL >= 0 ? 'profit' : 'loss'">
               {{ formatCurrency(month.avgPnL) }}
             </td>
-            <td class="text-center">{{ month.rrRatio.toFixed(2) }}</td>
-            <td class="text-center">{{ formatCurrency(month.funding) }}</td>
-            <td class="text-center">{{ formatCurrency(month.fees) }}</td>
-            <td class="text-center">
+            <td>{{ month.rrRatio.toFixed(2) }}</td>
+            <td>{{ formatCurrency(month.funding) }}</td>
+            <td>{{ formatCurrency(month.fees) }}</td>
+            <td>
               <span class="win-count">{{ month.wins }}</span>
               <span class="separator">/</span>
               <span class="loss-count">{{ month.losses }}</span>
@@ -103,11 +103,11 @@ export default {
 }
 
 .profit {
-  color: var(--color-success);
+  color: var(--color-profit) !important;
 }
 
 .loss {
-  color: var(--color-danger);
+  color: var(--color-loss) !important;
 }
 
 .month-empty {
