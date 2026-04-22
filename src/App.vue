@@ -18,6 +18,10 @@
               <a href="#" @click.prevent="currentView = 'trades'" :class="{ active: currentView === 'trades' }">
                 All Trades
               </a>
+              <button @click="toggleTheme" class="btn btn-secondary theme-toggle" title="Toggle Light/Dark Mode">
+                <span v-if="!isLightMode">☀️</span>
+                <span v-else>🌙</span>
+              </button>
             </nav>
           </div>
         </div>
@@ -59,10 +63,29 @@ export default {
   setup() {
     const currentView = ref('dashboard');
     const trades = ref([]);
+    const isLightMode = ref(true);
     let unsubscribe = null;
+
+    const toggleTheme = () => {
+      isLightMode.value = !isLightMode.value;
+      localStorage.setItem('theme', isLightMode.value ? 'light' : 'dark');
+      document.documentElement.classList.toggle('light-theme', isLightMode.value);
+    };
 
     // Subscribe to trades for all views
     onMounted(() => {
+      // Initialize theme
+      const savedTheme = localStorage.getItem('theme');
+      const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+
+      if (savedTheme === 'dark' || (!savedTheme && !prefersLight)) {
+        isLightMode.value = false;
+        document.documentElement.classList.remove('light-theme');
+      } else {
+        isLightMode.value = true;
+        document.documentElement.classList.add('light-theme');
+      }
+
       unsubscribe = subscribeToTrades((newTrades) => {
         trades.value = newTrades;
       });
@@ -77,6 +100,8 @@ export default {
     return {
       currentView,
       trades,
+      isLightMode,
+      toggleTheme,
     };
   },
 };
@@ -124,7 +149,20 @@ export default {
 
 .nav {
   display: flex;
+  align-items: center;
   gap: var(--spacing-xl);
+}
+
+.theme-toggle {
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
 }
 
 .nav a {
