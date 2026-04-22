@@ -41,6 +41,15 @@
         />
       </div>
 
+      <!-- Performance Chart -->
+      <div class="glass-card p-xl mb-xl">
+        <div class="flex justify-between items-center mb-lg">
+          <h3>PnL Curve</h3>
+          <div class="text-muted text-sm">Cumulative growth over time</div>
+        </div>
+        <PnLChart :trades="closedTrades" />
+      </div>
+
       <!-- Recent Trades -->
       <div class="glass-card p-xl">
         <div class="flex justify-between items-center mb-lg">
@@ -74,6 +83,7 @@
 import { computed } from 'vue';
 import StatsCard from './StatsCard.vue';
 import TradeList from './TradeList.vue';
+import PnLChart from './PnLChart.vue';
 import {
   calculateTotalPnL,
   calculateWinRate,
@@ -87,6 +97,7 @@ export default {
   components: {
     StatsCard,
     TradeList,
+    PnLChart,
   },
   props: {
     trades: {
