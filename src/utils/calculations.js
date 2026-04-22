@@ -265,8 +265,8 @@ export function calculateMonthlyBreakdown(trades) {
 
 /**
  * Calculate total fees paid
-
-
+ *
+ *
  * @param {Array} trades - Array of trade objects
  * @returns {number} Total fees
  */
@@ -329,7 +329,7 @@ export function calculateStreaks(trades) {
     if (isWin) {
       tempWinStreak++;
       tempLossStreak = 0;
-      
+
       if (tempWinStreak > longestWinStreak) {
         longestWinStreak = tempWinStreak;
       }
@@ -340,7 +340,7 @@ export function calculateStreaks(trades) {
     } else {
       tempLossStreak++;
       tempWinStreak = 0;
-      
+
       if (tempLossStreak > longestLossStreak) {
         longestLossStreak = tempLossStreak;
       }
@@ -366,12 +366,12 @@ export function calculateStreaks(trades) {
  */
 export function getCurrentStreak(trades) {
   const streaks = calculateStreaks(trades);
-  
+
   return {
     count: streaks.currentStreak,
     type: streaks.currentStreakType,
     emoji: streaks.currentStreakType === 'win' ? '🔥' : '❄️',
-    message: streaks.currentStreakType === 'win' 
+    message: streaks.currentStreakType === 'win'
       ? `${streaks.currentStreak} consecutive wins!`
       : streaks.currentStreakType === 'loss'
       ? `${streaks.currentStreak} consecutive losses`
@@ -387,14 +387,14 @@ export function getCurrentStreak(trades) {
  */
 export function calculateDailyPerformance(trades, daysToShow = 365) {
   const closedTrades = trades.filter((t) => t.status === 'CLOSED');
-  
+
   // Create a map of date -> {pnl, count, trades}
   const dailyData = {};
-  
+
   closedTrades.forEach((trade) => {
     const exitDate = trade.exit_timestamp?.toDate?.() || new Date(trade.exit_timestamp);
     const dateKey = exitDate.toISOString().split('T')[0]; // YYYY-MM-DD
-    
+
     if (!dailyData[dateKey]) {
       dailyData[dateKey] = {
         pnl: 0,
@@ -402,27 +402,27 @@ export function calculateDailyPerformance(trades, daysToShow = 365) {
         trades: [],
       };
     }
-    
+
     dailyData[dateKey].pnl += trade.pnl || 0;
     dailyData[dateKey].tradeCount += 1;
     dailyData[dateKey].trades.push(trade);
   });
-  
+
   // Generate array for last N days
   const result = [];
   const today = new Date();
-  
+
   for (let i = daysToShow - 1; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
     const dateKey = date.toISOString().split('T')[0];
-    
+
     const dayData = dailyData[dateKey] || { pnl: 0, tradeCount: 0, trades: [] };
-    
+
     // Determine color intensity based on PnL
     let color = 'neutral';
     let intensity = 0;
-    
+
     if (dayData.tradeCount > 0) {
       if (dayData.pnl > 0) {
         color = 'profit';
@@ -442,7 +442,7 @@ export function calculateDailyPerformance(trades, daysToShow = 365) {
         intensity = 1;
       }
     }
-    
+
     result.push({
       date,
       dateKey,
@@ -453,7 +453,7 @@ export function calculateDailyPerformance(trades, daysToShow = 365) {
       intensity,
     });
   }
-  
+
   return result;
 }
 
@@ -464,16 +464,16 @@ export function calculateDailyPerformance(trades, daysToShow = 365) {
  */
 export function calculateTimeBasedPerformance(trades) {
   const closedTrades = trades.filter((t) => t.status === 'CLOSED');
-  
+
   // Initialize buckets
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const dayBuckets = days.map(day => ({ name: day, pnl: 0, wins: 0, total: 0 }));
-  const hourBuckets = Array(24).fill(0).map((_, i) => ({ 
-    hour: i, 
-    label: `${i.toString().padStart(2, '0')}:00`, 
-    pnl: 0, 
-    wins: 0, 
-    total: 0 
+  const hourBuckets = Array(24).fill(0).map((_, i) => ({
+    hour: i,
+    label: `${i.toString().padStart(2, '0')}:00`,
+    pnl: 0,
+    wins: 0,
+    total: 0
   }));
 
   closedTrades.forEach(trade => {
@@ -517,33 +517,33 @@ export function calculateTimeBasedPerformance(trades) {
  */
 export function calculateMaxDrawdown(trades) {
   const closedTrades = trades.filter((t) => t.status === 'CLOSED');
-  
+
   if (closedTrades.length === 0) return 0;
-  
+
   // Sort by exit time
   const sortedTrades = [...closedTrades].sort((a, b) => {
     const timeA = a.exit_timestamp?.toDate?.() || new Date(a.exit_timestamp);
     const timeB = b.exit_timestamp?.toDate?.() || new Date(b.exit_timestamp);
     return timeA - timeB;
   });
-  
+
   let currentPnL = 0;
   let peak = 0;
   let maxDrawdown = 0;
-  
+
   sortedTrades.forEach(trade => {
     currentPnL += (trade.pnl || 0);
-    
+
     if (currentPnL > peak) {
       peak = currentPnL;
     }
-    
+
     const drawdown = peak - currentPnL;
     if (drawdown > maxDrawdown) {
       maxDrawdown = drawdown;
     }
   });
-  
+
   return maxDrawdown;
 }
 
@@ -555,9 +555,9 @@ export function calculateMaxDrawdown(trades) {
 export function calculateRiskRewardRatio(trades) {
   const avgWin = calculateAverageProfit(trades);
   const avgLoss = calculateAverageLoss(trades);
-  
+
   if (avgLoss === 0) return avgWin > 0 ? 100 : 0; // Infinite or zero
-  
+
   return Math.abs(avgWin / avgLoss);
 }
 
@@ -568,17 +568,101 @@ export function calculateRiskRewardRatio(trades) {
  */
 export function calculateProfitFactor(trades) {
   const closedTrades = trades.filter(t => t.status === 'CLOSED');
-  
+
   const grossProfit = closedTrades
     .filter(t => (t.pnl || 0) > 0)
     .reduce((sum, t) => sum + t.pnl, 0);
-    
+
   const grossLoss = closedTrades
     .filter(t => (t.pnl || 0) < 0)
     .reduce((sum, t) => sum + Math.abs(t.pnl), 0);
-    
+
   if (grossLoss === 0) return grossProfit > 0 ? 100 : 0;
-  
+
   return grossProfit / grossLoss;
 }
 
+/**
+ * Calculate PnL mapped by date
+ * @param {Array} trades - Array of trade objects
+ * @returns {Object} Map of "YYYY-MM-DD" -> totalPnL
+ */
+export function calculateDailyPnLMap(trades) {
+  const dailyMap = {};
+  trades.forEach(trade => {
+    if (trade.status === 'CLOSED' && typeof trade.pnl === 'number') {
+      const exitDate = trade.exit_timestamp?.toDate?.() || new Date(trade.exit_timestamp);
+      const dateKey = exitDate.toISOString().split('T')[0];
+      dailyMap[dateKey] = (dailyMap[dateKey] || 0) + trade.pnl;
+    }
+  });
+  return dailyMap;
+}
+
+/**
+ * Calculate daily-based statistics
+ * @param {Object} dailyPnLMap - Map of "YYYY-MM-DD" -> totalPnL
+ * @returns {Object} Daily statistics
+ */
+export function calculateDailyStats(dailyPnLMap) {
+  const values = Object.values(dailyPnLMap);
+  const tradingDays = values.length;
+  if (tradingDays === 0) {
+    return {
+      tradingDays: 0,
+      winningDays: 0,
+      lossDays: 0,
+      maxProfitDay: 0,
+      maxLossDay: 0,
+      avgDailyPnL: 0,
+    };
+  }
+
+  const winningDays = values.filter(v => v > 0).length;
+  const lossDays = values.filter(v => v < 0).length;
+  const maxProfitDay = Math.max(...values);
+  const maxLossDay = Math.min(...values);
+  const totalPnL = values.reduce((sum, v) => sum + v, 0);
+
+  return {
+    tradingDays,
+    winningDays,
+    lossDays,
+    maxProfitDay,
+    maxLossDay,
+    avgDailyPnL: totalPnL / tradingDays,
+  };
+}
+
+/**
+ * Calculate gross totals (profit and loss)
+ * @param {Array} trades - Array of trade objects
+ * @returns {Object} { totalProfit, totalLoss }
+ */
+export function calculateGrossTotals(trades) {
+  const closedTrades = trades.filter(t => t.status === 'CLOSED' && typeof t.pnl === 'number');
+  const totalProfit = closedTrades
+    .filter(t => t.pnl > 0)
+    .reduce((sum, t) => sum + t.pnl, 0);
+  const totalLoss = closedTrades
+    .filter(t => t.pnl < 0)
+    .reduce((sum, t) => sum + t.pnl, 0);
+
+  return { totalProfit, totalLoss };
+}
+
+/**
+ * Calculate average profit and loss per day
+ * @param {Object} dailyPnLMap - Map of "YYYY-MM-DD" -> totalPnL
+ * @returns {Object} { avgProfitDay, avgLossDay }
+ */
+export function calculateDailyAverages(dailyPnLMap) {
+  const values = Object.values(dailyPnLMap);
+  const winningDays = values.filter(v => v > 0);
+  const lossDays = values.filter(v => v < 0);
+
+  return {
+    avgProfitDay: winningDays.length > 0 ? winningDays.reduce((sum, v) => sum + v, 0) / winningDays.length : 0,
+    avgLossDay: lossDays.length > 0 ? lossDays.reduce((sum, v) => sum + v, 0) / lossDays.length : 0,
+  };
+}

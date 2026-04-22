@@ -19,38 +19,145 @@
     </div>
 
     <!-- Key Stats Grid -->
-      <div class="grid grid-cols-4 mb-xl">
-        <StatsCard
-          label="Total PnL"
-          :value="formatCurrency(totalPnL)"
-          :valueClass="totalPnL >= 0 ? 'profit' : 'loss'"
-          icon="💰"
-          :iconBg="totalPnL >= 0 ? 'var(--gradient-success)' : 'var(--gradient-danger)'"
-          :subtitle="`${formatPercentage(overallPnLPercent)} return`"
-        />
-        <StatsCard
-          label="Win Rate"
-          :value="formatPercentage(winRate)"
-          valueClass="profit"
-          icon="🎯"
-          iconBg="var(--gradient-primary)"
-          :subtitle="`${winningTrades}/${totalClosedTrades} wins`"
-        />
-        <StatsCard
-          label="Total Trades"
-          :value="trades.length"
-          icon="📈"
-          iconBg="linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)"
-          :subtitle="`${openTrades.length} open, ${closedTrades.length} closed`"
-        />
-        <StatsCard
-          label="Avg Profit"
-          :value="formatCurrency(avgProfit)"
-          valueClass="profit"
-          icon="📊"
-          iconBg="var(--gradient-success)"
-          :subtitle="`Avg Loss: ${formatCurrency(avgLoss)}`"
-        />
+      <div class="space-y-xl mb-xl">
+        <!-- Daily Performance -->
+        <div>
+          <h3 class="text-muted mb-md">Daily Performance</h3>
+          <div class="grid grid-cols-4">
+            <StatsCard
+              label="Total Trading Days"
+              :value="dailyStats.tradingDays"
+              icon="📅"
+              iconBg="var(--gradient-primary)"
+            />
+            <StatsCard
+              label="Winning Days"
+              :value="dailyStats.winningDays"
+              valueClass="profit"
+              icon="☀️"
+              iconBg="var(--gradient-success)"
+            />
+            <StatsCard
+              label="Loss Days"
+              :value="dailyStats.lossDays"
+              valueClass="loss"
+              icon="🌧️"
+              iconBg="var(--gradient-danger)"
+            />
+            <StatsCard
+              label="Avg Daily PnL"
+              :value="formatCurrency(dailyStats.avgDailyPnL)"
+              :valueClass="dailyStats.avgDailyPnL >= 0 ? 'profit' : 'loss'"
+              icon="📈"
+              :iconBg="dailyStats.avgDailyPnL >= 0 ? 'var(--gradient-success)' : 'var(--gradient-danger)'"
+            />
+          </div>
+        </div>
+
+        <!-- Streaks & Consistency -->
+        <div>
+          <h3 class="text-muted mb-md">Streaks & Consistency</h3>
+          <div class="grid grid-cols-4">
+            <StatsCard
+              label="Max Win Streak"
+              :value="streaks.longestWinStreak"
+              valueClass="profit"
+              icon="🔥"
+              iconBg="var(--gradient-success)"
+            />
+            <StatsCard
+              label="Max Loss Streak"
+              :value="streaks.longestLossStreak"
+              valueClass="loss"
+              icon="❄️"
+              iconBg="var(--gradient-danger)"
+            />
+            <StatsCard
+              label="Win Rate"
+              :value="formatPercentage(winRate)"
+              valueClass="profit"
+              icon="🎯"
+              iconBg="var(--gradient-primary)"
+            />
+            <StatsCard
+              label="Net PnL"
+              :value="formatCurrency(totalPnL)"
+              :valueClass="totalPnL >= 0 ? 'profit' : 'loss'"
+              icon="💰"
+              :iconBg="totalPnL >= 0 ? 'var(--gradient-success)' : 'var(--gradient-danger)'"
+            />
+          </div>
+        </div>
+
+        <!-- Gross Totals -->
+        <div>
+          <h3 class="text-muted mb-md">Gross Totals</h3>
+          <div class="grid grid-cols-4">
+            <StatsCard
+              label="Total Profit"
+              :value="formatCurrency(grossTotals.totalProfit)"
+              valueClass="profit"
+              icon="📈"
+              iconBg="var(--gradient-success)"
+            />
+            <StatsCard
+              label="Total Loss"
+              :value="formatCurrency(grossTotals.totalLoss)"
+              valueClass="loss"
+              icon="📉"
+              iconBg="var(--gradient-danger)"
+            />
+            <StatsCard
+              label="Max Profit Day"
+              :value="formatCurrency(dailyStats.maxProfitDay)"
+              valueClass="profit"
+              icon="🚀"
+              iconBg="var(--gradient-success)"
+            />
+            <StatsCard
+              label="Max Loss Day"
+              :value="formatCurrency(dailyStats.maxLossDay)"
+              valueClass="loss"
+              icon="⚠️"
+              iconBg="var(--gradient-danger)"
+            />
+          </div>
+        </div>
+
+        <!-- Cost Analysis -->
+        <div>
+          <h3 class="text-muted mb-md">Cost Analysis</h3>
+          <div class="grid grid-cols-4">
+            <StatsCard
+              label="Total Fees"
+              :value="formatCurrency(totalFees)"
+              valueClass="loss"
+              icon="💸"
+              iconBg="var(--gradient-danger)"
+            />
+            <StatsCard
+              label="Total Funding"
+              :value="formatCurrency(totalFunding)"
+              :valueClass="totalFunding >= 0 ? 'profit' : 'loss'"
+              icon="🏦"
+              iconBg="var(--gradient-primary)"
+            />
+            <StatsCard
+              label="Avg Profit/Day"
+              :value="formatCurrency(dailyAverages.avgProfitDay)"
+              valueClass="profit"
+              icon="📊"
+              iconBg="var(--gradient-success)"
+            />
+            <StatsCard
+              label="Avg Loss/Day"
+              :value="formatCurrency(dailyAverages.avgLossDay)"
+              valueClass="loss"
+              icon="📊"
+              iconBg="var(--gradient-danger)"
+            />
+          </div>
+        </div>
       </div>
 
       <!-- Performance Charts -->
@@ -109,6 +216,13 @@ import {
   calculateAverageProfit,
   calculateAverageLoss,
   calculateMonthlyBreakdown,
+  calculateDailyPnLMap,
+  calculateDailyStats,
+  calculateGrossTotals,
+  calculateDailyAverages,
+  calculateTotalFees,
+  calculateTotalFunding,
+  calculateStreaks,
 } from '../utils/calculations';
 import { formatCurrency, formatPercentage } from '../utils/formatters';
 
@@ -175,6 +289,14 @@ export default {
 
     const monthlyBreakdown = computed(() => calculateMonthlyBreakdown(closedTrades.value));
 
+    const dailyPnLMap = computed(() => calculateDailyPnLMap(closedTrades.value));
+    const dailyStats = computed(() => calculateDailyStats(dailyPnLMap.value));
+    const dailyAverages = computed(() => calculateDailyAverages(dailyPnLMap.value));
+    const grossTotals = computed(() => calculateGrossTotals(closedTrades.value));
+    const streaks = computed(() => calculateStreaks(closedTrades.value));
+    const totalFees = computed(() => calculateTotalFees(closedTrades.value));
+    const totalFunding = computed(() => calculateTotalFunding(closedTrades.value));
+
     const years = computed(() => {
       const activeYears = new Set();
       props.trades.forEach(trade => {
@@ -198,6 +320,13 @@ export default {
       recentTrades,
       overallPnLPercent,
       monthlyBreakdown,
+      dailyPnLMap,
+      dailyStats,
+      dailyAverages,
+      grossTotals,
+      streaks,
+      totalFees,
+      totalFunding,
       formatCurrency,
       formatPercentage,
     };
