@@ -43,7 +43,7 @@
 <script>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import TradeList from './TradeList.vue';
-import { subscribeToTrades } from '../firebase/trades';
+import { subscribeToCryptoTrades } from '../firebase/crypto';
 
 export default {
   name: 'AllTrades',
@@ -57,7 +57,7 @@ export default {
     let unsubscribe = null;
 
     onMounted(() => {
-      unsubscribe = subscribeToTrades((newTrades) => {
+      unsubscribe = subscribeToCryptoTrades((newTrades) => {
         const grouped = {};
 
         newTrades.forEach(trade => {
