@@ -85,6 +85,15 @@
               PnL
               <span v-if="sortColumn === 'pnl'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
             </th>
+            <th @click="sortBy('r_multiple')" class="sortable">
+              R-Multiple
+              <span v-if="sortColumn === 'r_multiple'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
+            </th>
+            <th @click="sortBy('days_held')" class="sortable">
+              Days
+              <span v-if="sortColumn === 'days_held'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
+            </th>
+            <th>Leverage</th>
             <th>Strategy</th>
             <th>Status</th>
             <th>Mode</th>
@@ -117,6 +126,11 @@
             <td :class="getPnLClass(trade.pnl)">
               {{ trade.status === 'CLOSED' ? formatCurrency(trade.pnl) : 'OPEN' }}
             </td>
+            <td :class="getPnLClass(trade.r_multiple)">
+              {{ trade.r_multiple != null ? trade.r_multiple.toFixed(2) + 'R' : '-' }}
+            </td>
+            <td>{{ trade.days_held != null ? trade.days_held + 'd' : '-' }}</td>
+            <td>{{ trade.leverage != null ? trade.leverage + 'x' : '-' }}</td>
             <td>{{ trade.strategy_name || 'N/A' }}</td>
             <td>
               <span class="badge" :class="`badge-${trade.status.toLowerCase()}`">

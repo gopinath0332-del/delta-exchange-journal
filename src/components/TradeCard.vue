@@ -26,12 +26,22 @@
         </span>
       </div>
 
+      <div v-if="trade.entry_execution_price != null" class="detail-row">
+        <span class="detail-label">Entry Exec Price</span>
+        <span class="detail-value">{{ formatCurrency(trade.entry_execution_price, '') }}</span>
+      </div>
+
       <div v-if="trade.status === 'CLOSED'" class="detail-row">
         <span class="detail-label">Exit</span>
         <span class="detail-value">
           <span :class="`side-${trade.exit_side}`">{{ trade.exit_side?.toUpperCase() }}</span>
           @ {{ formatCurrency(trade.exit_price, '') }}
         </span>
+      </div>
+
+      <div v-if="trade.status === 'CLOSED' && trade.exit_execution_price != null" class="detail-row">
+        <span class="detail-label">Exit Exec Price</span>
+        <span class="detail-value">{{ formatCurrency(trade.exit_execution_price, '') }}</span>
       </div>
 
       <div class="detail-row">
@@ -44,26 +54,90 @@
         <span class="detail-value">{{ formatDate(trade.exit_timestamp) }}</span>
       </div>
 
-      <div v-if="!compact" class="detail-row">
+      <div class="detail-row">
         <span class="detail-label">Days Held</span>
-        <span class="detail-value">{{ daysHeld }}</span>
+        <span class="detail-value">{{ trade.days_held != null ? trade.days_held + 'd' : daysHeld }}</span>
       </div>
 
-      <div v-if="!compact && trade.status === 'CLOSED'" class="detail-row">
+      <div v-if="trade.status === 'CLOSED'" class="detail-row">
         <span class="detail-label">PnL %</span>
         <span class="detail-value" :class="pnlClass">
           {{ formatPercentage(trade.pnl_percentage || 0) }}
         </span>
       </div>
 
-      <div v-if="!compact" class="detail-row">
+      <div v-if="trade.r_multiple != null" class="detail-row">
+        <span class="detail-label">R-Multiple</span>
+        <span class="detail-value" :class="trade.r_multiple >= 0 ? 'profit' : 'loss'">
+          {{ trade.r_multiple.toFixed(2) }}R
+        </span>
+      </div>
+
+      <div v-if="trade.mae_pct != null" class="detail-row">
+        <span class="detail-label">MAE %</span>
+        <span class="detail-value loss">{{ trade.mae_pct.toFixed(2) }}%</span>
+      </div>
+
+      <div v-if="trade.mfe_pct != null" class="detail-row">
+        <span class="detail-label">MFE %</span>
+        <span class="detail-value profit">{{ trade.mfe_pct.toFixed(2) }}%</span>
+      </div>
+
+      <div v-if="trade.leverage != null" class="detail-row">
+        <span class="detail-label">Leverage</span>
+        <span class="detail-value">{{ trade.leverage }}x</span>
+      </div>
+
+      <div v-if="trade.order_size != null" class="detail-row">
+        <span class="detail-label">Order Size</span>
+        <span class="detail-value">{{ trade.order_size }}</span>
+      </div>
+
+      <div v-if="trade.margin_used != null" class="detail-row">
+        <span class="detail-label">Margin Used</span>
+        <span class="detail-value">{{ formatCurrency(trade.margin_used) }}</span>
+      </div>
+
+      <div v-if="trade.remaining_margin != null" class="detail-row">
+        <span class="detail-label">Remaining Margin</span>
+        <span class="detail-value">{{ formatCurrency(trade.remaining_margin) }}</span>
+      </div>
+
+      <div v-if="trade.stop_loss_price != null" class="detail-row">
+        <span class="detail-label">Stop Loss</span>
+        <span class="detail-value loss">{{ formatCurrency(trade.stop_loss_price, '') }}</span>
+      </div>
+
+      <div v-if="trade.initial_risk != null" class="detail-row">
+        <span class="detail-label">Initial Risk</span>
+        <span class="detail-value loss">{{ formatCurrency(trade.initial_risk) }}</span>
+      </div>
+
+      <div v-if="trade.atr != null" class="detail-row">
+        <span class="detail-label">ATR</span>
+        <span class="detail-value">{{ trade.atr.toFixed(4) }}</span>
+      </div>
+
+      <div v-if="trade.max_price_seen != null" class="detail-row">
+        <span class="detail-label">Max Price Seen</span>
+        <span class="detail-value">{{ formatCurrency(trade.max_price_seen, '') }}</span>
+      </div>
+
+      <div v-if="trade.min_price_seen != null" class="detail-row">
+        <span class="detail-label">Min Price Seen</span>
+        <span class="detail-value">{{ formatCurrency(trade.min_price_seen, '') }}</span>
+      </div>
+
+      <div class="detail-row">
         <span class="detail-label">Fees</span>
         <span class="detail-value">{{ formatCurrency(trade.trading_fees || 0) }}</span>
       </div>
 
-      <div v-if="!compact" class="detail-row">
+      <div class="detail-row">
         <span class="detail-label">Funding Charges</span>
-        <span class="detail-value">{{ formatCurrency(trade.funding_charges || 0) }}</span>
+        <span class="detail-value" :class="(trade.funding_charges || 0) >= 0 ? 'profit' : 'loss'">
+          {{ formatCurrency(trade.funding_charges || 0) }}
+        </span>
       </div>
 
       <div class="detail-row">
@@ -113,9 +187,7 @@ export default {
     });
 
     const formattedPnL = computed(() => {
-      if (props.trade.status === 'OPEN') {
-        return 'OPEN';
-      }
+      if (props.trade.status === 'OPEN') return 'OPEN';
       return formatCurrency(props.trade.pnl || 0);
     });
 
