@@ -215,7 +215,7 @@ export default {
     // All trades with realized PnL (CLOSED + PARTIAL_CLOSED) for the selected year
     const pnlTrades = computed(() =>
       props.trades.filter((t) =>
-        ((t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') || t.status === 'PARTIAL_CLOSED') &&
+        (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') &&
         typeof t.pnl === 'number' &&
         (t.entry_timestamp?.toDate?.() || new Date(t.entry_timestamp)).getFullYear() === selectedYear.value
       )

@@ -31,7 +31,7 @@
         <span class="detail-value">{{ formatCurrency(trade.entry_execution_price, '') }}</span>
       </div>
 
-      <div v-if="trade.status === 'CLOSED'" class="detail-row">
+      <div v-if="trade.status === 'CLOSED' || trade.status === 'PARTIAL_CLOSED'" class="detail-row">
         <span class="detail-label">Exit</span>
         <span class="detail-value">
           <span :class="`side-${trade.exit_side}`">{{ trade.exit_side?.toUpperCase() }}</span>
@@ -39,7 +39,7 @@
         </span>
       </div>
 
-      <div v-if="trade.status === 'CLOSED' && trade.exit_execution_price != null" class="detail-row">
+      <div v-if="(trade.status === 'CLOSED' || trade.status === 'PARTIAL_CLOSED') && trade.exit_execution_price != null" class="detail-row">
         <span class="detail-label">Exit Exec Price</span>
         <span class="detail-value">{{ formatCurrency(trade.exit_execution_price, '') }}</span>
       </div>
@@ -49,7 +49,7 @@
         <span class="detail-value">{{ formatDate(trade.entry_timestamp) }}</span>
       </div>
 
-      <div v-if="trade.status === 'CLOSED'" class="detail-row">
+      <div v-if="trade.status === 'CLOSED' || trade.status === 'PARTIAL_CLOSED'" class="detail-row">
         <span class="detail-label">Exit Time</span>
         <span class="detail-value">{{ formatDate(trade.exit_timestamp) }}</span>
       </div>
@@ -59,7 +59,7 @@
         <span class="detail-value">{{ trade.days_held != null ? trade.days_held + 'd' : daysHeld }}</span>
       </div>
 
-      <div v-if="trade.status === 'CLOSED'" class="detail-row">
+      <div v-if="trade.status === 'CLOSED' || trade.status === 'PARTIAL_CLOSED'" class="detail-row">
         <span class="detail-label">PnL %</span>
         <span class="detail-value" :class="pnlClass">
           {{ formatPercentage(trade.pnl_percentage || 0) }}

@@ -152,7 +152,7 @@ export default {
   setup(props) {
     // Filter closed trades for analytics
     const closedTrades = computed(() =>
-      props.trades.filter((t) => t.status === 'CLOSED')
+      props.trades.filter((t) => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED'))
     );
 
     // Best and worst trades
