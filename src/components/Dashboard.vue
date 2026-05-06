@@ -43,7 +43,8 @@
           />
           <StatsCard
             label="Total Trades"
-            :value="totalClosedTrades"
+            :value="totalTrades"
+            :subtitle="totalClosedTrades + ' closed'"
             icon="📈"
             iconBg="linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)"
           />
@@ -204,6 +205,12 @@ export default {
 
     const totalClosedTrades = computed(() => closedTrades.value.length);
 
+    const totalTrades = computed(() =>
+      props.trades.filter((t) =>
+        (t.entry_timestamp?.toDate?.() || new Date(t.entry_timestamp)).getFullYear() === selectedYear.value
+      ).length
+    );
+
     const totalPnL = computed(() => calculateTotalPnL(closedTrades.value));
 
     const winRate = computed(() => calculateWinRate(closedTrades.value));
@@ -260,6 +267,7 @@ export default {
       closedTrades,
       openTrades,
       totalClosedTrades,
+      totalTrades,
       totalPnL,
       winRate,
       winningTrades,
