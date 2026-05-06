@@ -282,7 +282,7 @@ export default {
 .month-labels {
   grid-column: 2;
   display: grid;
-  grid-template-columns: repeat(53, 12px);
+  grid-template-columns: repeat(53, 1fr);
   gap: 3px;
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
@@ -290,40 +290,33 @@ export default {
 }
 
 .day-labels {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: repeat(7, 1fr);
   gap: 3px;
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
-  padding-top: 3px;
 }
 
 .day-labels span {
-  height: 12px;
   display: flex;
   align-items: center;
-  line-height: 1;
 }
 
-.day-labels span:nth-child(2) {
-  margin-top: 12px; /* Skip Tuesday */
-}
-
-.day-labels span:nth-child(3) {
-  margin-top: 12px; /* Skip Thursday */
-}
+.day-labels span:nth-child(1) { grid-row: 1; } /* Mon */
+.day-labels span:nth-child(2) { grid-row: 3; } /* Wed */
+.day-labels span:nth-child(3) { grid-row: 5; } /* Fri */
 
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(53, 12px);
+  grid-template-columns: repeat(53, 1fr);
   grid-auto-flow: column;
-  grid-template-rows: repeat(7, 12px);
+  grid-template-rows: repeat(7, 1fr);
   gap: 3px;
 }
 
 .day-cell {
-  width: 12px;
-  height: 12px;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   border-radius: 2px;
   cursor: pointer;
   transition: all var(--transition-fast);
