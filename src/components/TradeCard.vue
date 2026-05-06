@@ -98,6 +98,24 @@
         <span class="detail-value">{{ formatCurrency(trade.margin_used) }}</span>
       </div>
 
+      <!-- Planned Levels -->
+      <div v-if="trade.take_profit" class="detail-row">
+        <span class="detail-label">Take Profit</span>
+        <span class="detail-value profit">{{ formatCurrency(trade.take_profit, '') }}</span>
+      </div>
+      <div v-if="trade.stop_loss" class="detail-row">
+        <span class="detail-label">Stop Loss</span>
+        <span class="detail-value loss">{{ formatCurrency(trade.stop_loss, '') }}</span>
+      </div>
+
+      <!-- Discipline Score -->
+      <div v-if="disciplineScore !== null" class="detail-row mt-sm pt-sm border-top">
+        <span class="detail-label font-bold">Discipline Score</span>
+        <span class="detail-value font-bold" :class="disciplineScore >= 80 ? 'profit' : disciplineScore >= 60 ? 'neutral' : 'loss'">
+          {{ disciplineScore }} / 100
+        </span>
+      </div>
+
       <div v-if="trade.remaining_margin != null" class="detail-row">
         <span class="detail-label">Remaining Margin</span>
         <span class="detail-value">{{ formatCurrency(trade.remaining_margin) }}</span>
@@ -160,13 +178,8 @@
 
 <script>
 import { computed } from 'vue';
-import {
-  formatCurrency,
-  formatDate,
-  formatPercentage,
-  formatDaysHeld,
-  formatMode,
-} from '../utils/formatters';
+import { formatCurrency, formatDate, formatPercentage, formatDaysHeld, formatMode } from '../utils/formatters';
+import { calculateDisciplineScore } from '../utils/calculations';
 
 export default {
   name: 'TradeCard',
@@ -182,9 +195,11 @@ export default {
   },
   setup(props) {
     const pnlClass = computed(() => {
-      if (!props.trade.pnl) return 'neutral';
-      return props.trade.pnl > 0 ? 'profit' : 'loss';
+      const pnl = props.trade.pnl || 0;
+      return pnl > 0 ? 'profit' : pnl < 0 ? 'loss' : 'neutral';
     });
+
+    const disciplineScore = computed(() => calculateDisciplineScore(props.trade));
 
     const formattedPnL = computed(() => {
       if (props.trade.status === 'OPEN') return 'OPEN';
@@ -197,6 +212,7 @@ export default {
 
     return {
       pnlClass,
+      disciplineScore,
       formattedPnL,
       daysHeld,
       formatCurrency,

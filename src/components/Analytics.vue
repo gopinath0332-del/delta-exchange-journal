@@ -51,6 +51,15 @@
         iconBg="var(--gradient-danger)"
         subtitle="Largest peak-to-trough drop"
       />
+      <StatsCard
+        label="Discipline Score"
+        :value="avgDisciplineScore !== null ? avgDisciplineScore.toFixed(0) : 'N/A'"
+        :valueClass="avgDisciplineScore === null ? 'neutral' : (avgDisciplineScore >= 80 ? 'profit' : avgDisciplineScore >= 60 ? 'neutral' : 'loss')"
+        icon="🧠"
+        :iconBg="avgDisciplineScore === null ? 'var(--gradient-card)' : (avgDisciplineScore >= 80 ? 'var(--gradient-success)' : avgDisciplineScore >= 60 ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' : 'var(--gradient-danger)')"
+        subtitle="Avg adherence to plan"
+        tooltip="Measures adherence to your 1R risk plan. Penalties apply for losing >1R (moving stops) or capturing <2R on winners (early exits)."
+      />
     </div>
 
     <!-- Calendar Heatmap -->
@@ -151,6 +160,7 @@ import {
   calculateWinRate,
   calculateRiskRewardRatio,
   calculateProfitFactor,
+  calculateDisciplineScore,
 } from '../utils/calculations';
 
 import { formatCurrency, formatPercentage } from '../utils/formatters';
@@ -214,6 +224,14 @@ export default {
     const winRate = computed(() => calculateWinRate(closedTrades.value));
     const riskRewardRatio = computed(() => calculateRiskRewardRatio(closedTrades.value));
     const profitFactor = computed(() => calculateProfitFactor(closedTrades.value));
+    
+    const avgDisciplineScore = computed(() => {
+      const scores = closedTrades.value
+        .map(t => calculateDisciplineScore(t))
+        .filter(s => s !== null);
+      if (scores.length === 0) return null;
+      return scores.reduce((sum, s) => sum + s, 0) / scores.length;
+    });
 
     return {
       selectedYear,
@@ -227,6 +245,7 @@ export default {
       winRate,
       riskRewardRatio,
       profitFactor,
+      avgDisciplineScore,
       formatCurrency,
       formatPercentage,
     };

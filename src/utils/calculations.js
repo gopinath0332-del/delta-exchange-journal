@@ -716,3 +716,64 @@ export function calculateDailyAverages(dailyPnLMap) {
     avgLossDay: lossDays.length > 0 ? lossDays.reduce((sum, v) => sum + v, 0) / lossDays.length : 0,
   };
 }
+
+/**
+ * Calculate a proprietary Discipline Score for a trade
+ * Compares actual exit prices to intended Take Profit/Stop Loss levels.
+ * @param {Object} trade - Trade object
+ * @returns {number|null} Score from 0-100, or null if plan data missing
+ */
+export function calculateDisciplineScore(trade) {
+  let { entry_price, exit_price, take_profit, stop_loss, entry_side, r_multiple, pnl } = trade;
+  
+  // OPTION 2: REVERSE ENGINEERING & BENCHMARKING
+  // 1. Infer Stop Loss from R-Multiple if missing
+  if (!stop_loss && r_multiple && pnl) {
+    const plannedRisk = Math.abs(pnl / r_multiple);
+    const isLong = entry_side?.toLowerCase() === 'buy' || entry_side?.toLowerCase() === 'long';
+    stop_loss = isLong ? (entry_price - plannedRisk) : (entry_price + plannedRisk);
+  }
+
+  // 2. Infer Take Profit using a 2:1 RR Benchmark if missing
+  if (!take_profit && stop_loss && entry_price) {
+    const plannedRisk = Math.abs(entry_price - stop_loss);
+    const isLong = entry_side?.toLowerCase() === 'buy' || entry_side?.toLowerCase() === 'long';
+    // Assume a standard 2:1 Reward-to-Risk ratio for the "Plan"
+    const plannedReward = plannedRisk * 2;
+    take_profit = isLong ? (entry_price + plannedReward) : (entry_price - plannedReward);
+  }
+
+  // If we still don't have enough data to form a plan, we can't score
+  if (!stop_loss || !take_profit || !exit_price || !entry_price) return null;
+
+  const isLong = entry_side?.toLowerCase() === 'buy' || entry_side?.toLowerCase() === 'long';
+  const plannedRisk = Math.abs(entry_price - stop_loss);
+  const plannedReward = Math.abs(take_profit - entry_price);
+  
+  if (plannedRisk === 0 || plannedReward === 0) return null;
+
+  const actualPnL = isLong ? (exit_price - entry_price) : (entry_price - exit_price);
+  
+  if (actualPnL >= 0) {
+    // WINNING TRADE
+    const ratio = actualPnL / plannedReward;
+    
+    // If we hit or exceeded the 2R target, perfect score (100)
+    if (ratio >= 0.95) return 100; 
+    
+    // Penalize "fearful" early exits (capturing less than the 2R benchmark)
+    return Math.max(0, Math.min(100, Math.round(ratio * 100)));
+  } else {
+    // LOSING TRADE
+    const actualRisk = Math.abs(actualPnL);
+    
+    // If we exited at or before our planned stop, perfect discipline (100)
+    if (actualRisk <= plannedRisk * 1.05) { // 5% buffer for slippage
+      return 100;
+    } else {
+      // If we moved our stop loss (lost more than planned), heavy penalty
+      const riskRatio = actualRisk / plannedRisk;
+      return Math.max(0, Math.round(100 / riskRatio));
+    }
+  }
+}

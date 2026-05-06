@@ -11,6 +11,10 @@
       </div>
       <div v-if="subtitle" class="stats-subtitle">{{ subtitle }}</div>
     </div>
+    <div v-if="tooltip" class="tooltip-container">
+      <span class="info-icon">ⓘ</span>
+      <div class="tooltip-text">{{ tooltip }}</div>
+    </div>
   </div>
 </template>
 
@@ -47,6 +51,10 @@ export default {
     animate: {
       type: Boolean,
       default: false,
+    },
+    tooltip: {
+      type: String,
+      default: '',
     },
   },
   setup(props) {
@@ -98,6 +106,7 @@ export default {
 
 <style scoped>
 .stats-card {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--spacing-lg);
@@ -164,5 +173,66 @@ export default {
   .stats-value {
     font-size: var(--font-size-2xl);
   }
+}
+
+/* Tooltip Styles */
+.tooltip-container {
+  position: absolute;
+  bottom: var(--spacing-sm);
+  right: var(--spacing-sm);
+  cursor: help;
+}
+
+.info-icon {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.tooltip-container:hover .info-icon {
+  opacity: 1;
+  color: var(--color-info);
+}
+
+.tooltip-text {
+  visibility: hidden;
+  width: 240px;
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  text-align: center;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  position: absolute;
+  z-index: 100;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s, visibility 0.3s;
+  font-size: var(--font-size-xs);
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+  line-height: 1.4;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+}
+
+.tooltip-container:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+.tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: var(--glass-border) transparent transparent transparent;
 }
 </style>
