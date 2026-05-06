@@ -183,10 +183,30 @@ export function calculatePnLBySymbol(trades) {
     if ((trade.status === 'CLOSED' || trade.status === 'PARTIAL_CLOSED') && typeof trade.pnl === 'number') {
       const symbol = trade.symbol || 'Unknown';
       if (!symbolMap[symbol]) {
-        symbolMap[symbol] = { pnl: 0, count: 0 };
+        symbolMap[symbol] = { 
+          pnl: 0, 
+          count: 0, 
+          wins: 0,
+          grossProfit: 0,
+          grossLoss: 0,
+          bestTrade: -Infinity,
+          worstTrade: Infinity
+        };
       }
-      symbolMap[symbol].pnl += trade.pnl;
+      
+      const pnl = trade.pnl;
+      symbolMap[symbol].pnl += pnl;
       symbolMap[symbol].count += 1;
+      
+      if (pnl > 0) {
+        symbolMap[symbol].wins += 1;
+        symbolMap[symbol].grossProfit += pnl;
+      } else {
+        symbolMap[symbol].grossLoss += Math.abs(pnl);
+      }
+      
+      if (pnl > symbolMap[symbol].bestTrade) symbolMap[symbol].bestTrade = pnl;
+      if (pnl < symbolMap[symbol].worstTrade) symbolMap[symbol].worstTrade = pnl;
     }
   });
 
@@ -194,6 +214,11 @@ export function calculatePnLBySymbol(trades) {
     symbol,
     pnl: data.pnl,
     tradeCount: data.count,
+    winRate: (data.wins / data.count) * 100,
+    avgPnL: data.pnl / data.count,
+    profitFactor: data.grossLoss === 0 ? (data.grossProfit > 0 ? 99 : 0) : data.grossProfit / data.grossLoss,
+    bestTrade: data.bestTrade,
+    worstTrade: data.worstTrade
   }));
 }
 

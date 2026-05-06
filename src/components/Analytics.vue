@@ -58,10 +58,16 @@
       <CalendarHeatmap :trades="yearTrades" />
     </div>
 
-    <!-- Symbol Performance -->
+    <!-- Symbol Performance Chart -->
     <div class="glass-card p-xl mb-xl">
-      <h3 class="mb-md">Symbol Performance</h3>
+      <h3 class="mb-md">Symbol Performance (PnL Distribution)</h3>
       <PnLBreakdown :trades="yearTrades" :showMonthFilter="false" />
+    </div>
+
+    <!-- Detailed Symbol Performance Table -->
+    <div class="glass-card p-xl mb-xl">
+      <h3 class="mb-md">Detailed Symbol Analysis</h3>
+      <SymbolPerformanceTable :trades="yearTrades" />
     </div>
 
     <!-- Performance Ratio Metrics -->
@@ -133,6 +139,7 @@ import TradeCard from './TradeCard.vue';
 import PnLChart from './PnLChart.vue';
 import StrategyPerformance from './StrategyPerformance.vue';
 import PnLBreakdown from './PnLBreakdown.vue';
+import SymbolPerformanceTable from './SymbolPerformanceTable.vue';
 import CalendarHeatmap from './CalendarHeatmap.vue';
 import TimeAnalysis from './TimeAnalysis.vue';
 import {
@@ -156,6 +163,7 @@ export default {
     PnLChart,
     StrategyPerformance,
     PnLBreakdown,
+    SymbolPerformanceTable,
     CalendarHeatmap,
     TimeAnalysis,
   },
