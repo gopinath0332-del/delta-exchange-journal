@@ -777,3 +777,90 @@ export function calculateDisciplineScore(trade) {
     }
   }
 }
+
+/**
+ * Calculate the history of streaks for charting
+ * @param {Array} trades - Array of trade objects
+ * @returns {Array} Array of { date, count } where count is positive for wins, negative for losses
+ */
+export function calculateStreakHistory(trades) {
+  const closedTrades = trades
+    .filter((t) => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') && typeof t.pnl === 'number')
+    .sort((a, b) => {
+      const rawA = a.exit_timestamp?.toDate?.() || (a.exit_timestamp ? new Date(a.exit_timestamp) : null);
+      const rawB = b.exit_timestamp?.toDate?.() || (b.exit_timestamp ? new Date(b.exit_timestamp) : null);
+      const dateA = (rawA && !isNaN(rawA)) ? rawA : (a.entry_timestamp?.toDate?.() || new Date(a.entry_timestamp));
+      const dateB = (rawB && !isNaN(rawB)) ? rawB : (b.entry_timestamp?.toDate?.() || new Date(b.entry_timestamp));
+      return dateA - dateB;
+    });
+
+  if (closedTrades.length === 0) return [];
+
+  const history = [];
+  let currentCount = 0;
+  let currentType = null; // 'win' or 'loss'
+
+  closedTrades.forEach(trade => {
+    const isWin = trade.pnl > 0;
+    const type = isWin ? 'win' : 'loss';
+
+    if (type === currentType) {
+      currentCount++;
+    } else {
+      currentType = type;
+      currentCount = 1;
+    }
+
+    const rawExit = trade.exit_timestamp?.toDate?.() || (trade.exit_timestamp ? new Date(trade.exit_timestamp) : null);
+    const date = (rawExit && !isNaN(rawExit)) ? rawExit : (trade.entry_timestamp?.toDate?.() || new Date(trade.entry_timestamp));
+
+    history.push({
+      date,
+      count: isWin ? currentCount : -currentCount
+    });
+  });
+
+  return history;
+}
+
+/**
+ * Calculate the distribution of streak lengths
+ * @param {Array} trades - Array of trade objects
+ * @returns {Object} { win: { length: count }, loss: { length: count } }
+ */
+export function calculateStreakDistribution(trades) {
+  const closedTrades = trades
+    .filter((t) => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') && typeof t.pnl === 'number')
+    .sort((a, b) => {
+      const rawA = a.exit_timestamp?.toDate?.() || (a.exit_timestamp ? new Date(a.exit_timestamp) : null);
+      const rawB = b.exit_timestamp?.toDate?.() || (b.exit_timestamp ? new Date(b.exit_timestamp) : null);
+      const dateA = (rawA && !isNaN(rawA)) ? rawA : (a.entry_timestamp?.toDate?.() || new Date(a.entry_timestamp));
+      const dateB = (rawB && !isNaN(rawB)) ? rawB : (b.entry_timestamp?.toDate?.() || new Date(b.entry_timestamp));
+      return dateA - dateB;
+    });
+
+  if (closedTrades.length === 0) return { win: {}, loss: {} };
+
+  const distribution = { win: {}, loss: {} };
+  let currentStreak = 0;
+  let currentType = null;
+
+  closedTrades.forEach(trade => {
+    const type = trade.pnl > 0 ? 'win' : 'loss';
+    if (type === currentType) {
+      currentStreak++;
+    } else {
+      if (currentType) {
+        distribution[currentType][currentStreak] = (distribution[currentType][currentStreak] || 0) + 1;
+      }
+      currentType = type;
+      currentStreak = 1;
+    }
+  });
+
+  if (currentType) {
+    distribution[currentType][currentStreak] = (distribution[currentType][currentStreak] || 0) + 1;
+  }
+
+  return distribution;
+}

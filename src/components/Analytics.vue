@@ -107,10 +107,19 @@
       />
     </div>
 
-    <!-- Charts Section -->
+    <!-- PnL Chart -->
     <div class="glass-card p-xl mb-xl">
-      <h3 class="mb-md">Cumulative PnL</h3>
+      <h3 class="mb-md">Cumulative PnL Performance</h3>
       <PnLChart :trades="yearTrades" :showMonthFilter="false" />
+    </div>
+
+    <!-- Win/Loss Streak Distribution -->
+    <div class="glass-card p-xl mb-xl">
+      <div class="flex-between mb-md">
+        <h3>Streak Distribution</h3>
+        <span class="text-xs text-muted">Frequency of consecutive wins vs. losses</span>
+      </div>
+      <StreakChart :trades="yearTrades" />
     </div>
 
     <div class="grid grid-cols-2 mb-xl">
@@ -146,6 +155,7 @@ import { computed, ref } from 'vue';
 import StatsCard from './StatsCard.vue';
 import TradeCard from './TradeCard.vue';
 import PnLChart from './PnLChart.vue';
+import StreakChart from './StreakChart.vue';
 import StrategyPerformance from './StrategyPerformance.vue';
 import PnLBreakdown from './PnLBreakdown.vue';
 import SymbolPerformanceTable from './SymbolPerformanceTable.vue';
@@ -171,6 +181,7 @@ export default {
     StatsCard,
     TradeCard,
     PnLChart,
+    StreakChart,
     StrategyPerformance,
     PnLBreakdown,
     SymbolPerformanceTable,
