@@ -1,9 +1,20 @@
 <template>
   <div class="analytics fade-in">
     <!-- Header -->
-    <div class="analytics-header">
-      <h1>Analytics</h1>
-      <p>Deep dive into your trading performance and statistics</p>
+    <div class="analytics-header flex justify-between items-center mb-2xl">
+      <div>
+        <h1>Analytics</h1>
+        <p>Deep dive into your trading performance and statistics</p>
+      </div>
+      <!-- Year Filter -->
+      <div class="filter-group">
+        <label for="analyticsYearFilter" class="mr-sm text-sm text-muted">Year</label>
+        <select v-model="selectedYear" id="analyticsYearFilter" class="select">
+          <option v-for="year in years" :key="year" :value="year">
+            {{ year }}
+          </option>
+        </select>
+      </div>
     </div>
 
     <!-- Streak & Risk Statistics -->
@@ -44,12 +55,13 @@
 
     <!-- Calendar Heatmap -->
     <div class="glass-card p-xl mb-xl">
-      <CalendarHeatmap :trades="trades" />
+      <CalendarHeatmap :trades="yearTrades" />
     </div>
 
-    <!-- Time Analysis -->
-    <div class="mb-xl">
-      <TimeAnalysis :trades="trades" />
+    <!-- Symbol Performance -->
+    <div class="glass-card p-xl mb-xl">
+      <h3 class="mb-md">Symbol Performance</h3>
+      <PnLBreakdown :trades="yearTrades" :showMonthFilter="false" />
     </div>
 
     <!-- Performance Ratio Metrics -->
@@ -81,18 +93,20 @@
     </div>
 
     <!-- Charts Section -->
-    <div class="grid grid-cols-2 mb-xl">
-      <!-- PnL Chart -->
-      <div class="glass-card p-xl">
-        <h3>Cumulative PnL</h3>
-        <PnLChart :trades="trades" />
-      </div>
+    <div class="glass-card p-xl mb-xl">
+      <h3 class="mb-md">Cumulative PnL</h3>
+      <PnLChart :trades="yearTrades" :showMonthFilter="false" />
+    </div>
 
+    <div class="grid grid-cols-2 mb-xl">
       <!-- Strategy Performance -->
       <div class="glass-card p-xl">
-        <h3>Strategy Performance</h3>
-        <StrategyPerformance :trades="trades" />
+        <h3 class="mb-md">Strategy Performance</h3>
+        <StrategyPerformance :trades="yearTrades" />
       </div>
+
+      <!-- Time Analysis -->
+      <TimeAnalysis :trades="yearTrades" />
     </div>
 
     <!-- Best & Worst Trades -->
@@ -113,11 +127,12 @@
 </template>
 
 <script>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import StatsCard from './StatsCard.vue';
 import TradeCard from './TradeCard.vue';
 import PnLChart from './PnLChart.vue';
 import StrategyPerformance from './StrategyPerformance.vue';
+import PnLBreakdown from './PnLBreakdown.vue';
 import CalendarHeatmap from './CalendarHeatmap.vue';
 import TimeAnalysis from './TimeAnalysis.vue';
 import {
@@ -140,6 +155,7 @@ export default {
     TradeCard,
     PnLChart,
     StrategyPerformance,
+    PnLBreakdown,
     CalendarHeatmap,
     TimeAnalysis,
   },
@@ -150,9 +166,29 @@ export default {
     },
   },
   setup(props) {
+    const selectedYear = ref(new Date().getFullYear());
+
+    const years = computed(() => {
+      const yearSet = new Set();
+      props.trades.forEach((t) => {
+        const d = t.entry_timestamp?.toDate?.() || new Date(t.entry_timestamp);
+        if (d && !isNaN(d)) yearSet.add(d.getFullYear());
+      });
+      const currentYear = new Date().getFullYear();
+      yearSet.add(currentYear);
+      return Array.from(yearSet).sort((a, b) => b - a);
+    });
+
+    const yearTrades = computed(() =>
+      props.trades.filter((t) => {
+        const d = t.entry_timestamp?.toDate?.() || new Date(t.entry_timestamp);
+        return d.getFullYear() === selectedYear.value;
+      })
+    );
+
     // Filter closed trades for analytics
     const closedTrades = computed(() =>
-      props.trades.filter((t) => t.status === 'CLOSED')
+      yearTrades.value.filter((t) => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED'))
     );
 
     // Best and worst trades
@@ -172,6 +208,9 @@ export default {
     const profitFactor = computed(() => calculateProfitFactor(closedTrades.value));
 
     return {
+      selectedYear,
+      years,
+      yearTrades,
       bestTrade,
       worstTrade,
       streakStats,

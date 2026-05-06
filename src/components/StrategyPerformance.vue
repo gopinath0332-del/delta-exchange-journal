@@ -1,17 +1,25 @@
 <template>
   <div class="strategy-performance">
-    <canvas ref="chartCanvas"></canvas>
-
-    <!-- Strategy Stats Table -->
-    <div class="strategy-stats mt-lg">
-      <div v-for="(stats, name) in strategyStats" :key="name" class="strategy-stat-row">
-        <div class="strategy-name">{{ name }}</div>
-        <div class="strategy-metrics">
-          <span class="metric">{{ stats.totalTrades }} trades</span>
-          <span class="metric" :class="stats.totalPnL >= 0 ? 'profit' : 'loss'">
-            {{ formatCurrency(stats.totalPnL) }}
-          </span>
-          <span class="metric profit">{{ formatPercentage(stats.winRate) }} win rate</span>
+    <div class="symbol-list-container">
+      <div v-if="statsList.length === 0" class="text-muted text-center py-xl">
+        No data available
+      </div>
+      <div v-else class="symbol-list">
+        <div v-for="(stat, index) in statsList" :key="stat.name" class="symbol-row">
+          <div class="symbol-info">
+            <span class="rank-badge">{{ index + 1 }}</span>
+            <span class="symbol-name">{{ stat.name }}</span>
+            <span class="trade-count">({{ stat.totalTrades }} trades)</span>
+          </div>
+          <div class="bar-track">
+            <div 
+              class="bar-fill" 
+              :class="stat.totalPnL >= 0 ? 'profit-bg' : 'loss-bg'"
+              :style="{ width: `${(Math.abs(stat.totalPnL) / maxAbsPnL) * 100}%` }"
+            >
+              <span class="bar-text">{{ formatCurrency(stat.totalPnL) }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -19,12 +27,9 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue';
-import { Chart, registerables } from 'chart.js';
+import { computed } from 'vue';
 import { calculateStrategyStats } from '../utils/calculations';
-import { formatCurrency, formatPercentage } from '../utils/formatters';
-
-Chart.register(...registerables);
+import { formatCurrency } from '../utils/formatters';
 
 export default {
   name: 'StrategyPerformance',
@@ -35,155 +40,141 @@ export default {
     },
   },
   setup(props) {
-    const chartCanvas = ref(null);
-    let chartInstance = null;
-
-    const strategyStats = computed(() => calculateStrategyStats(props.trades));
-
-    const createChart = () => {
-      if (!chartCanvas.value || Object.keys(strategyStats.value).length === 0) return;
-
-      // Destroy existing chart
-      if (chartInstance) {
-        chartInstance.destroy();
-      }
-
-      const strategies = Object.keys(strategyStats.value);
-      const pnlData = strategies.map((name) => strategyStats.value[name].totalPnL);
-
-      // Create color array based on PnL
-      const backgroundColors = pnlData.map((pnl) =>
-        pnl >= 0 ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)'
-      );
-      const borderColors = pnlData.map((pnl) =>
-        pnl >= 0 ? '#22c55e' : '#ef4444'
-      );
-
-      const ctx = chartCanvas.value.getContext('2d');
-
-      chartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: strategies,
-          datasets: [
-            {
-              label: 'Total PnL',
-              data: pnlData,
-              backgroundColor: backgroundColors,
-              borderColor: borderColors,
-              borderWidth: 2,
-              borderRadius: 8,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          aspectRatio: 2,
-          plugins: {
-            legend: {
-              display: false,
-            },
-            tooltip: {
-              backgroundColor: 'rgba(30, 36, 66, 0.95)',
-              titleColor: '#f9fafb',
-              bodyColor: '#d1d5db',
-              borderColor: 'rgba(255, 255, 255, 0.1)',
-              borderWidth: 1,
-              padding: 12,
-              callbacks: {
-                label: (context) => {
-                  const strategyName = context.label;
-                  const stats = strategyStats.value[strategyName];
-                  return [
-                    `PnL: $${stats.totalPnL.toFixed(2)}`,
-                    `Trades: ${stats.totalTrades}`,
-                    `Win Rate: ${stats.winRate.toFixed(2)}%`,
-                  ];
-                },
-              },
-            },
-          },
-          scales: {
-            x: {
-              grid: {
-                display: false,
-              },
-              ticks: {
-                color: '#9ca3af',
-                maxRotation: 45,
-                minRotation: 0,
-              },
-            },
-            y: {
-              grid: {
-                color: 'rgba(255, 255, 255, 0.05)',
-                drawBorder: false,
-              },
-              ticks: {
-                color: '#9ca3af',
-                callback: (value) => `$${value}`,
-              },
-            },
-          },
-        },
+    const statsList = computed(() => {
+      const statsObj = calculateStrategyStats(props.trades);
+      const arr = Object.keys(statsObj).map(name => ({
+        name,
+        ...statsObj[name]
+      }));
+      // Sort by positive PnL (green) first, then negative PnL (red), keeping absolute PnL descending within groups
+      return arr.sort((a, b) => {
+        const aIsPositive = a.totalPnL >= 0;
+        const bIsPositive = b.totalPnL >= 0;
+        
+        if (aIsPositive !== bIsPositive) {
+          return aIsPositive ? -1 : 1;
+        }
+        
+        return Math.abs(b.totalPnL) - Math.abs(a.totalPnL);
       });
-    };
-
-    onMounted(() => {
-      createChart();
     });
 
-    watch(
-      () => props.trades,
-      () => {
-        createChart();
-      },
-      { deep: true }
-    );
+    const maxAbsPnL = computed(() => {
+      if (statsList.value.length === 0) return 1;
+      return Math.max(...statsList.value.map(s => Math.abs(s.totalPnL)));
+    });
 
     return {
-      chartCanvas,
-      strategyStats,
+      statsList,
+      maxAbsPnL,
       formatCurrency,
-      formatPercentage,
     };
   },
 };
 </script>
 
 <style scoped>
-.strategy-performance {
-  width: 100%;
+/* Custom List UI (matches Symbol Performance) */
+.symbol-list-container {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: var(--spacing-sm);
 }
 
-.strategy-stats {
+.symbol-list-container::-webkit-scrollbar {
+  width: 6px;
+}
+.symbol-list-container::-webkit-scrollbar-thumb {
+  background-color: var(--glass-border);
+  border-radius: 4px;
+}
+
+.symbol-row {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
+  align-items: center;
+  margin-bottom: 12px;
 }
 
-.strategy-stat-row {
-  background: var(--color-bg-secondary);
-  padding: var(--spacing-md);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--glass-border);
+.symbol-info {
+  display: flex;
+  align-items: center;
+  width: 180px; /* fixed width for labels */
+  flex-shrink: 0;
 }
 
-.strategy-name {
-  font-weight: 600;
+.rank-badge {
+  background: #3b82f6; /* Blue badge */
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.symbol-name {
+  font-weight: 700;
   color: var(--color-text-primary);
-  margin-bottom: var(--spacing-xs);
+  margin-right: 8px;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
-.strategy-metrics {
+.trade-count {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.bar-track {
+  flex-grow: 1;
+  background: rgba(255, 255, 255, 0.05);
+  height: 32px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
   display: flex;
-  gap: var(--spacing-md);
-  flex-wrap: wrap;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 6px;
+  min-width: fit-content;
+  transition: width 0.5s ease-out;
 }
 
-.metric {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+.profit-bg {
+  background: #10b981; /* Green */
+}
+
+.loss-bg {
+  background: #ef4444; /* Red */
+}
+
+.bar-text {
+  color: white;
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .symbol-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .symbol-info {
+    width: 100%;
+    margin-bottom: 6px;
+  }
+  .bar-track {
+    width: 100%;
+  }
 }
 </style>
