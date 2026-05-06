@@ -148,7 +148,7 @@ export function calculateStrategyStats(trades) {
  */
 export function calculateCumulativePnL(trades) {
   const closedTrades = trades
-    .filter((t) => t.status === 'CLOSED' && typeof t.pnl === 'number')
+    .filter((t) => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') && typeof t.pnl === 'number')
     .sort((a, b) => {
       const rawA = a.exit_timestamp?.toDate?.() || (a.exit_timestamp ? new Date(a.exit_timestamp) : null);
       const rawB = b.exit_timestamp?.toDate?.() || (b.exit_timestamp ? new Date(b.exit_timestamp) : null);
