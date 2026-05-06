@@ -18,6 +18,9 @@
               <a href="#" @click.prevent="currentView = 'trades'" :class="{ active: currentView === 'trades' }">
                 All Trades
               </a>
+              <a href="#" @click.prevent="currentView = 'calendar'" :class="{ active: currentView === 'calendar' }">
+                Calendar View
+              </a>
               <button @click="toggleTheme" class="btn btn-secondary theme-toggle" title="Toggle Light/Dark Mode">
                 <span v-if="!isLightMode">☀️</span>
                 <span v-else>🌙</span>
@@ -33,6 +36,7 @@
           <Dashboard v-if="currentView === 'dashboard'" :trades="trades" />
           <Analytics v-else-if="currentView === 'analytics'" :trades="trades" />
           <AllTrades v-else-if="currentView === 'trades'" />
+          <CalendarView v-else-if="currentView === 'calendar'" :trades="trades" />
         </div>
       </main>
 
@@ -51,6 +55,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import Dashboard from './components/Dashboard.vue';
 import Analytics from './components/Analytics.vue';
 import AllTrades from './components/AllTrades.vue';
+import CalendarView from './components/CalendarView.vue';
 import { subscribeToCryptoTrades } from './firebase/crypto';
 
 export default {
@@ -59,6 +64,7 @@ export default {
     Dashboard,
     Analytics,
     AllTrades,
+    CalendarView,
   },
   setup() {
     const currentView = ref('dashboard');
