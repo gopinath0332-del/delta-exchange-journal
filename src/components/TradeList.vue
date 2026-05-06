@@ -105,7 +105,7 @@
             v-for="trade in displayedTrades"
             :key="trade.id"
             @click="selectTrade(trade)"
-            class="trade-row"
+            :class="['trade-row', getPnLClass(trade.pnl)]"
           >
             <td class="font-semibold">{{ trade.symbol }}</td>
             <td>{{ formatShortDate(trade.entry_timestamp) }}</td>
@@ -407,6 +407,28 @@ export default {
 
 .trade-row {
   cursor: pointer;
+  transition: all var(--transition-base);
+  border-left: 4px solid transparent;
+}
+
+.trade-row.profit {
+  background: rgba(16, 185, 129, 0.1);
+  border-left-color: #10b981;
+}
+.trade-row.profit:hover {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+.trade-row.loss {
+  background: rgba(239, 68, 68, 0.1);
+  border-left-color: #ef4444;
+}
+.trade-row.loss:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.trade-row.neutral:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .empty-state {
