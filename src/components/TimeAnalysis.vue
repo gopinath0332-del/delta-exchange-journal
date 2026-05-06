@@ -1,20 +1,10 @@
 <template>
   <div class="time-analysis">
-    <div class="charts-grid">
-      <!-- Day of Week Chart -->
-      <div class="glass-card p-xl">
-        <h3 class="mb-md">Performance by Day</h3>
-        <div class="chart-container">
-          <canvas ref="dayChartCanvas"></canvas>
-        </div>
-      </div>
-
-      <!-- Hour of Day Chart -->
-      <div class="glass-card p-xl">
-        <h3 class="mb-md">Performance by Hour</h3>
-        <div class="chart-container">
-          <canvas ref="hourChartCanvas"></canvas>
-        </div>
+    <!-- Day of Week Chart -->
+    <div class="glass-card p-xl">
+      <h3 class="mb-md">Performance by Day</h3>
+      <div class="chart-container">
+        <canvas ref="dayChartCanvas"></canvas>
       </div>
     </div>
   </div>
@@ -38,16 +28,13 @@ export default {
   },
   setup(props) {
     const dayChartCanvas = ref(null);
-    const hourChartCanvas = ref(null);
     let dayChartInstance = null;
-    let hourChartInstance = null;
 
     const createCharts = () => {
       if (!props.trades.length) return;
 
       const { byDay, byHour } = calculateTimeBasedPerformance(props.trades);
 
-      // --- Create Day Chart ---
       if (dayChartCanvas.value) {
         if (dayChartInstance) dayChartInstance.destroy();
         
@@ -69,31 +56,6 @@ export default {
             }]
           },
           options: getChartOptions('Day'),
-        });
-      }
-
-      // --- Create Hour Chart ---
-      if (hourChartCanvas.value) {
-        if (hourChartInstance) hourChartInstance.destroy();
-
-        const hourCtx = hourChartCanvas.value.getContext('2d');
-        const hourColors = byHour.map(h => h.pnl >= 0 ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)');
-        const hourBorderColors = byHour.map(h => h.pnl >= 0 ? '#22c55e' : '#ef4444');
-
-        hourChartInstance = new Chart(hourCtx, {
-          type: 'bar',
-          data: {
-            labels: byHour.map(h => h.hour), // 0, 1, 2...
-            datasets: [{
-              label: 'Net PnL',
-              data: byHour.map(h => h.pnl),
-              backgroundColor: hourColors,
-              borderColor: hourBorderColors,
-              borderWidth: 1,
-              borderRadius: 2,
-            }]
-          },
-          options: getChartOptions('Hour'),
         });
       }
     };
@@ -148,26 +110,15 @@ export default {
     onMounted(createCharts);
     watch(() => props.trades, createCharts, { deep: true });
 
-    return { dayChartCanvas, hourChartCanvas };
+    return { dayChartCanvas };
   },
 };
 </script>
 
 <style scoped>
-.charts-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-xl);
-}
-
 .chart-container {
   height: 250px;
   width: 100%;
 }
 
-@media (max-width: 1024px) {
-  .charts-grid {
-    grid-template-columns: 1fr;
-  }
-}
 </style>
