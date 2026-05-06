@@ -1,10 +1,11 @@
 <template>
   <div class="pnl-chart">
-    <div class="chart-header">
+    <div v-if="showMonthFilter" class="chart-header">
       <div class="filters-row">
         <div class="filter-group">
           <label for="monthFilter">Month</label>
           <select v-model="selectedMonth" id="monthFilter" class="select select-sm">
+            <option value="all">Entire Year</option>
             <option v-for="month in months" :key="month.value" :value="month.value">
               {{ month.label }}
             </option>
@@ -29,6 +30,10 @@ export default {
     trades: {
       type: Array,
       required: true,
+    },
+    showMonthFilter: {
+      type: Boolean,
+      default: true,
     },
   },
   setup(props) {
@@ -61,6 +66,11 @@ export default {
 
     // Effect to handle default month selection based on current date and data availability
     watch([() => props.trades], () => {
+      if (!props.showMonthFilter) {
+        selectedMonth.value = 'all';
+        return;
+      }
+
       const now = new Date();
       const currentMonthVal = String(now.getMonth() + 1).padStart(2, '0');
 
@@ -104,17 +114,7 @@ export default {
       );
       const data = cumulativeData.map((d) => d.cumulativePnL);
 
-      const finalPnL = data[data.length - 1] || 0;
-      const lineColor = finalPnL >= 0 ? '#22c55e' : '#ef4444';
-      const gradientColor = finalPnL >= 0
-        ? 'rgba(34, 197, 94, 0.2)'
-        : 'rgba(239, 68, 68, 0.2)';
-
       const ctx = chartCanvas.value.getContext('2d');
-
-      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-      gradient.addColorStop(0, gradientColor);
-      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
       chartInstance = new Chart(ctx, {
         type: 'line',
@@ -124,14 +124,19 @@ export default {
             {
               label: 'Cumulative PnL',
               data,
-              borderColor: lineColor,
-              backgroundColor: gradient,
+              fill: {
+                target: 'origin',
+                above: 'rgba(34, 197, 94, 0.2)', // green fill above zero
+                below: 'rgba(239, 68, 68, 0.2)'  // red fill below zero
+              },
               borderWidth: 3,
-              fill: true,
               tension: 0.4,
               pointRadius: 4,
               pointHoverRadius: 6,
-              pointBackgroundColor: lineColor,
+              segment: {
+                borderColor: ctx => ctx.p1.parsed.y < 0 ? '#ef4444' : '#22c55e'
+              },
+              pointBackgroundColor: ctx => ctx.parsed && ctx.parsed.y < 0 ? '#ef4444' : '#22c55e',
               pointBorderColor: '#fff',
               pointBorderWidth: 2,
             },

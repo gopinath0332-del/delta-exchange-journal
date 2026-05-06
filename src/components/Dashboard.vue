@@ -43,7 +43,8 @@
           />
           <StatsCard
             label="Total Trades"
-            :value="totalClosedTrades"
+            :value="totalTrades"
+            :subtitle="totalClosedTrades + ' closed'"
             icon="📈"
             iconBg="linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)"
           />
@@ -104,14 +105,24 @@
       </div>
 
       <!-- Performance Charts -->
+      <div class="glass-card p-xl mb-xl flex flex-col">
+        <div class="flex justify-between items-center mb-lg">
+          <h3>Yearly PnL Curve</h3>
+          <div class="text-muted text-sm">Cumulative growth for {{ selectedYear }}</div>
+        </div>
+        <div class="flex-grow">
+          <PnLChart :trades="pnlTrades" :showMonthFilter="false" />
+        </div>
+      </div>
+
       <div class="grid grid-cols-2 gap-xl mb-xl">
         <div class="glass-card p-xl flex flex-col">
           <div class="flex justify-between items-center mb-lg">
-            <h3>PnL Curve</h3>
-            <div class="text-muted text-sm">Cumulative growth over time</div>
+            <h3>Monthly PnL Curve</h3>
+            <div class="text-muted text-sm">Cumulative growth by month</div>
           </div>
           <div class="flex-grow">
-            <PnLChart :trades="closedTrades" />
+            <PnLChart :trades="pnlTrades" />
           </div>
         </div>
 
@@ -135,13 +146,12 @@
         <MonthlyBreakdownCard :data="monthlyBreakdown" />
       </div>
 
-      <!-- Recent Trades -->
+      <!-- Open Trades -->
       <div class="glass-card p-xl">
         <div class="flex justify-between items-center mb-lg">
-          <h3>Recent Trades</h3>
-          <router-link to="/trades" class="btn btn-secondary">View All</router-link>
+          <h3>Open Trades</h3>
         </div>
-        <TradeList :trades="recentTrades" :limit="5" />
+        <TradeList :trades="openTrades" :limit="5" />
       </div>
     </div>
   </template>
@@ -193,7 +203,7 @@ export default {
 
     // Computed statistics
     const closedTrades = computed(() =>
-      props.trades.filter((t) => t.status === 'CLOSED' &&
+      props.trades.filter((t) => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') &&
         (t.entry_timestamp?.toDate?.() || new Date(t.entry_timestamp)).getFullYear() === selectedYear.value)
     );
 
@@ -202,7 +212,22 @@ export default {
         (t.entry_timestamp?.toDate?.() || new Date(t.entry_timestamp)).getFullYear() === selectedYear.value)
     );
 
+    // All trades with realized PnL (CLOSED + PARTIAL_CLOSED) for the selected year
+    const pnlTrades = computed(() =>
+      props.trades.filter((t) =>
+        ((t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') || t.status === 'PARTIAL_CLOSED') &&
+        typeof t.pnl === 'number' &&
+        (t.entry_timestamp?.toDate?.() || new Date(t.entry_timestamp)).getFullYear() === selectedYear.value
+      )
+    );
+
     const totalClosedTrades = computed(() => closedTrades.value.length);
+
+    const totalTrades = computed(() =>
+      props.trades.filter((t) =>
+        (t.entry_timestamp?.toDate?.() || new Date(t.entry_timestamp)).getFullYear() === selectedYear.value
+      ).length
+    );
 
     const totalPnL = computed(() => calculateTotalPnL(closedTrades.value));
 
@@ -259,7 +284,9 @@ export default {
       years,
       closedTrades,
       openTrades,
+      pnlTrades,
       totalClosedTrades,
+      totalTrades,
       totalPnL,
       winRate,
       winningTrades,
