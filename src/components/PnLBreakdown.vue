@@ -21,6 +21,7 @@
 <script>
 import { ref, computed, onMounted, watch } from 'vue';
 import { Chart, registerables } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { calculatePnLBySymbol } from '../utils/calculations';
 
 Chart.register(...registerables);
@@ -97,6 +98,7 @@ export default {
 
       chartInstance = new Chart(ctx, {
         type: 'doughnut',
+        plugins: [ChartDataLabels],
         data: {
           labels,
           datasets: [{
@@ -123,6 +125,23 @@ export default {
                   const value = context.parsed;
                   return `PnL: $${value.toFixed(2)}`;
                 }
+              }
+            },
+            datalabels: {
+              color: '#fff',
+              font: {
+                weight: 'bold',
+                size: 11
+              },
+              formatter: (value) => {
+                return '$' + value.toFixed(2);
+              },
+              display: function(context) {
+                // Hide labels for very small slices to prevent crowding
+                const dataset = context.dataset;
+                const total = dataset.data.reduce((acc, curr) => acc + Math.abs(curr), 0);
+                const value = dataset.data[context.dataIndex];
+                return Math.abs(value) / total > 0.05;
               }
             }
           }
