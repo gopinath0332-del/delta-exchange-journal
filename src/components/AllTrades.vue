@@ -28,6 +28,12 @@
           Open Trades ({{ openTrades.length }})
         </button>
         <button
+          @click="activeTab = 'partial'"
+          :class="['btn btn-secondary', activeTab === 'partial' ? 'active-tab' : '']"
+        >
+          Partial Trades ({{ partialTrades.length }})
+        </button>
+        <button
           @click="activeTab = 'closed'"
           :class="['btn btn-secondary', activeTab === 'closed' ? 'active-tab' : '']"
         >
@@ -64,10 +70,12 @@ export default {
     });
 
     const openTrades = computed(() => trades.value.filter(t => t.status === 'OPEN'));
+    const partialTrades = computed(() => trades.value.filter(t => t.status === 'PARTIAL_CLOSED'));
     const closedTrades = computed(() => trades.value.filter(t => t.status === 'CLOSED'));
 
     const filteredTrades = computed(() => {
       if (activeTab.value === 'open') return openTrades.value;
+      if (activeTab.value === 'partial') return partialTrades.value;
       if (activeTab.value === 'closed') return closedTrades.value;
       return trades.value;
     });
@@ -83,6 +91,7 @@ export default {
       loading,
       activeTab,
       openTrades,
+      partialTrades,
       closedTrades,
       filteredTrades,
     };

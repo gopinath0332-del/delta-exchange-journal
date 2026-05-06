@@ -15,6 +15,7 @@
         <select v-model="statusFilter" class="select">
           <option value="">All Status</option>
           <option value="OPEN">Open</option>
+          <option value="PARTIAL_CLOSED">Partial</option>
           <option value="CLOSED">Closed</option>
         </select>
 
@@ -115,7 +116,7 @@
               @ {{ formatCurrency(trade.entry_price, '') }}
             </td>
             <td>
-              <span v-if="trade.status === 'CLOSED'">
+              <span v-if="trade.status !== 'OPEN'">
                 <span :class="`side-${trade.exit_side}`">
                   {{ trade.exit_side?.toUpperCase() }}
                 </span>
@@ -124,7 +125,7 @@
               <span v-else class="text-muted">-</span>
             </td>
             <td :class="getPnLClass(trade.pnl)">
-              {{ trade.status === 'CLOSED' ? formatCurrency(trade.pnl) : 'OPEN' }}
+              {{ trade.status !== 'OPEN' ? formatCurrency(trade.pnl) : 'OPEN' }}
             </td>
             <td :class="getPnLClass(trade.r_multiple)">
               {{ trade.r_multiple != null ? trade.r_multiple.toFixed(2) + 'R' : '-' }}
