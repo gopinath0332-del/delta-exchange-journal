@@ -109,8 +109,17 @@ export default {
 
     const symbolStats = computed(() => {
       const data = calculatePnLBySymbol(filteredTrades.value);
-      // Sort by absolute PnL descending
-      return data.sort((a, b) => Math.abs(b.pnl) - Math.abs(a.pnl));
+      // Sort by positive PnL (green) first, then negative PnL (red), keeping absolute PnL descending within groups
+      return data.sort((a, b) => {
+        const aIsPositive = a.pnl >= 0;
+        const bIsPositive = b.pnl >= 0;
+        
+        if (aIsPositive !== bIsPositive) {
+          return aIsPositive ? -1 : 1;
+        }
+        
+        return Math.abs(b.pnl) - Math.abs(a.pnl);
+      });
     });
 
     const maxAbsPnL = computed(() => {

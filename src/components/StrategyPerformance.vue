@@ -46,8 +46,17 @@ export default {
         name,
         ...statsObj[name]
       }));
-      // Sort by absolute PnL descending
-      return arr.sort((a, b) => Math.abs(b.totalPnL) - Math.abs(a.totalPnL));
+      // Sort by positive PnL (green) first, then negative PnL (red), keeping absolute PnL descending within groups
+      return arr.sort((a, b) => {
+        const aIsPositive = a.totalPnL >= 0;
+        const bIsPositive = b.totalPnL >= 0;
+        
+        if (aIsPositive !== bIsPositive) {
+          return aIsPositive ? -1 : 1;
+        }
+        
+        return Math.abs(b.totalPnL) - Math.abs(a.totalPnL);
+      });
     });
 
     const maxAbsPnL = computed(() => {
