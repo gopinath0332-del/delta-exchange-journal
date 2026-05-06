@@ -412,16 +412,16 @@ export default {
 }
 
 .trade-row.profit {
-  background: rgba(16, 185, 129, 0.1);
-  border-left-color: #10b981;
+  background: var(--color-profit-bg);
+  border-left-color: var(--color-profit);
 }
 .trade-row.profit:hover {
   background: rgba(16, 185, 129, 0.2);
 }
 
 .trade-row.loss {
-  background: rgba(239, 68, 68, 0.1);
-  border-left-color: #ef4444;
+  background: var(--color-loss-bg);
+  border-left-color: var(--color-loss);
 }
 .trade-row.loss:hover {
   background: rgba(239, 68, 68, 0.2);
