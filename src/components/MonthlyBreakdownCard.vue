@@ -26,7 +26,7 @@
             <td :class="month.avgPnL >= 0 ? 'profit' : 'loss'">
               {{ formatCurrency(month.avgPnL) }}
             </td>
-            <td>{{ month.rrRatio.toFixed(4) }}</td>
+            <td>{{ month.rrRatio.toFixed(2) }}</td>
             <td>{{ formatCurrency(month.funding) }}</td>
             <td>{{ formatCurrency(month.fees) }}</td>
             <td>

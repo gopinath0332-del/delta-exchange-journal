@@ -45,8 +45,8 @@ export function formatPnL(value, currency = '$') {
  * @param {number} decimals - Number of decimal places (default: 2)
  * @returns {string} Formatted percentage string
  */
-export function formatPercentage(value, decimals = 4) {
-  if (typeof value !== 'number' || isNaN(value)) return '0.0000%';
+export function formatPercentage(value, decimals = 2) {
+  if (typeof value !== 'number' || isNaN(value)) return '0.00%';
   return `${value.toFixed(decimals)}%`;
 }
 
@@ -131,17 +131,17 @@ export function formatTradeSide(side) {
  * @returns {string} Formatted number string
  */
 export function formatLargeNumber(value) {
-  if (typeof value !== 'number' || isNaN(value)) return '0.0000';
+  if (typeof value !== 'number' || isNaN(value)) return '0.00';
 
   const absValue = Math.abs(value);
   const sign = value < 0 ? '-' : '';
 
   if (absValue >= 1000000) {
-    return `${sign}${(absValue / 1000000).toFixed(4)}M`;
+    return `${sign}${(absValue / 1000000).toFixed(2)}M`;
   } else if (absValue >= 1000) {
-    return `${sign}${(absValue / 1000).toFixed(4)}K`;
+    return `${sign}${(absValue / 1000).toFixed(2)}K`;
   } else {
-    return `${sign}${absValue.toFixed(4)}`;
+    return `${sign}${absValue.toFixed(2)}`;
   }
 }
 

@@ -128,7 +128,7 @@
               {{ trade.status !== 'OPEN' ? formatCurrency(trade.pnl) : 'OPEN' }}
             </td>
             <td :class="getPnLClass(trade.r_multiple)">
-              {{ trade.r_multiple != null ? trade.r_multiple.toFixed(4) + 'R' : '-' }}
+              {{ trade.r_multiple != null ? trade.r_multiple.toFixed(2) + 'R' : '-' }}
             </td>
             <td>{{ trade.days_held != null ? trade.days_held + 'd' : '-' }}</td>
             <td>{{ trade.leverage != null ? trade.leverage + 'x' : '-' }}</td>
