@@ -182,13 +182,18 @@ export function calculatePnLBySymbol(trades) {
   trades.forEach((trade) => {
     if ((trade.status === 'CLOSED' || trade.status === 'PARTIAL_CLOSED') && typeof trade.pnl === 'number') {
       const symbol = trade.symbol || 'Unknown';
-      symbolMap[symbol] = (symbolMap[symbol] || 0) + trade.pnl;
+      if (!symbolMap[symbol]) {
+        symbolMap[symbol] = { pnl: 0, count: 0 };
+      }
+      symbolMap[symbol].pnl += trade.pnl;
+      symbolMap[symbol].count += 1;
     }
   });
 
-  return Object.entries(symbolMap).map(([symbol, pnl]) => ({
+  return Object.entries(symbolMap).map(([symbol, data]) => ({
     symbol,
-    pnl,
+    pnl: data.pnl,
+    tradeCount: data.count,
   }));
 }
 

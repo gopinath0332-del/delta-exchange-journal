@@ -13,19 +13,37 @@
         </div>
       </div>
     </div>
-    <div class="chart-container">
-      <canvas ref="chartCanvas"></canvas>
+    
+    <div class="symbol-list-container">
+      <div v-if="symbolStats.length === 0" class="text-muted text-center py-xl">
+        No symbol data available
+      </div>
+      <div v-else class="symbol-list">
+        <div v-for="(stat, index) in symbolStats" :key="stat.symbol" class="symbol-row">
+          <div class="symbol-info">
+            <span class="rank-badge">{{ index + 1 }}</span>
+            <span class="symbol-name">{{ stat.symbol }}</span>
+            <span class="trade-count">({{ stat.tradeCount }} trades)</span>
+          </div>
+          <div class="bar-track">
+            <div 
+              class="bar-fill" 
+              :class="stat.pnl >= 0 ? 'profit-bg' : 'loss-bg'"
+              :style="{ width: `${(Math.abs(stat.pnl) / maxAbsPnL) * 100}%` }"
+            >
+              <span class="bar-text">{{ formatCurrency(stat.pnl) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue';
-import { Chart, registerables } from 'chart.js';
-import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { ref, computed, watch } from 'vue';
 import { calculatePnLBySymbol } from '../utils/calculations';
-
-Chart.register(...registerables);
+import { formatCurrency } from '../utils/formatters';
 
 export default {
   name: 'PnLBreakdown',
@@ -40,8 +58,6 @@ export default {
     },
   },
   setup(props) {
-    const chartCanvas = ref(null);
-    let chartInstance = null;
     const selectedMonth = ref('all');
 
     const months = computed(() => {
@@ -91,78 +107,24 @@ export default {
       });
     });
 
-    const createChart = () => {
-      if (!chartCanvas.value) return;
-      if (chartInstance) chartInstance.destroy();
+    const symbolStats = computed(() => {
+      const data = calculatePnLBySymbol(filteredTrades.value);
+      // Sort by absolute PnL descending
+      return data.sort((a, b) => Math.abs(b.pnl) - Math.abs(a.pnl));
+    });
 
-      const symbolData = calculatePnLBySymbol(filteredTrades.value);
-      if (symbolData.length === 0) return;
+    const maxAbsPnL = computed(() => {
+      if (symbolStats.value.length === 0) return 1; // avoid division by zero
+      return Math.max(...symbolStats.value.map(s => Math.abs(s.pnl)));
+    });
 
-      const labels = symbolData.map(d => d.symbol);
-      const values = symbolData.map(d => d.pnl);
-
-      const ctx = chartCanvas.value.getContext('2d');
-
-      // Generate distinct colors for symbols
-      const colors = labels.map((_, i) => `hsla(${i * (360 / labels.length)}, 70%, 60%, 0.8)`);
-
-      chartInstance = new Chart(ctx, {
-        type: 'doughnut',
-        plugins: [ChartDataLabels],
-        data: {
-          labels,
-          datasets: [{
-            data: values,
-            backgroundColor: colors,
-            borderColor: 'rgba(0, 0, 0, 0.1)',
-            borderWidth: 1,
-          }],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'right',
-              labels: {
-                color: '#9ca3af',
-                font: { size: 12 }
-              }
-            },
-            tooltip: {
-              callbacks: {
-                label: (context) => {
-                  const value = context.parsed;
-                  return `PnL: $${value.toFixed(2)}`;
-                }
-              }
-            },
-            datalabels: {
-              color: '#fff',
-              font: {
-                weight: 'bold',
-                size: 11
-              },
-              formatter: (value) => {
-                return '$' + value.toFixed(2);
-              },
-              display: function(context) {
-                // Hide labels for very small slices to prevent crowding
-                const dataset = context.dataset;
-                const total = dataset.data.reduce((acc, curr) => acc + Math.abs(curr), 0);
-                const value = dataset.data[context.dataIndex];
-                return Math.abs(value) / total > 0.05;
-              }
-            }
-          }
-        }
-      });
+    return { 
+      selectedMonth, 
+      months, 
+      symbolStats, 
+      maxAbsPnL, 
+      formatCurrency 
     };
-
-    onMounted(createChart);
-    watch([() => props.trades, selectedMonth], createChart);
-
-    return { chartCanvas, selectedMonth, months };
   },
 };
 </script>
@@ -196,9 +158,108 @@ export default {
   padding: 4px 8px;
   font-size: var(--font-size-xs);
 }
-.chart-container {
-  position: relative;
-  height: 300px;
-  width: 100%;
+
+/* Custom Symbol List UI */
+.symbol-list-container {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: var(--spacing-sm);
+}
+
+.symbol-list-container::-webkit-scrollbar {
+  width: 6px;
+}
+.symbol-list-container::-webkit-scrollbar-thumb {
+  background-color: var(--glass-border);
+  border-radius: 4px;
+}
+
+.symbol-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.symbol-info {
+  display: flex;
+  align-items: center;
+  width: 220px; /* fixed width for labels */
+  flex-shrink: 0;
+}
+
+.rank-badge {
+  background: #3b82f6; /* Blue badge */
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.symbol-name {
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-right: 8px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.trade-count {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.bar-track {
+  flex-grow: 1;
+  background: rgba(255, 255, 255, 0.05);
+  height: 32px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 6px;
+  min-width: fit-content;
+  transition: width 0.5s ease-out;
+}
+
+.profit-bg {
+  background: #10b981; /* Green */
+}
+
+.loss-bg {
+  background: #ef4444; /* Red */
+}
+
+.bar-text {
+  color: white;
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .symbol-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .symbol-info {
+    width: 100%;
+    margin-bottom: 6px;
+  }
+  .bar-track {
+    width: 100%;
+  }
 }
 </style>
