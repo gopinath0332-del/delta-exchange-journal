@@ -15,6 +15,7 @@
         <select v-model="statusFilter" class="select">
           <option value="">All Status</option>
           <option value="OPEN">Open</option>
+          <option value="PARTIAL_CLOSED">Partial</option>
           <option value="CLOSED">Closed</option>
         </select>
 
@@ -85,6 +86,15 @@
               PnL
               <span v-if="sortColumn === 'pnl'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
             </th>
+            <th @click="sortBy('r_multiple')" class="sortable">
+              R-Multiple
+              <span v-if="sortColumn === 'r_multiple'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
+            </th>
+            <th @click="sortBy('days_held')" class="sortable">
+              Days
+              <span v-if="sortColumn === 'days_held'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
+            </th>
+            <th>Leverage</th>
             <th>Strategy</th>
             <th>Status</th>
             <th>Mode</th>
@@ -106,7 +116,7 @@
               @ {{ formatCurrency(trade.entry_price, '') }}
             </td>
             <td>
-              <span v-if="trade.status === 'CLOSED'">
+              <span v-if="trade.status !== 'OPEN'">
                 <span :class="`side-${trade.exit_side}`">
                   {{ trade.exit_side?.toUpperCase() }}
                 </span>
@@ -115,8 +125,13 @@
               <span v-else class="text-muted">-</span>
             </td>
             <td :class="getPnLClass(trade.pnl)">
-              {{ trade.status === 'CLOSED' ? formatCurrency(trade.pnl) : 'OPEN' }}
+              {{ trade.status !== 'OPEN' ? formatCurrency(trade.pnl) : 'OPEN' }}
             </td>
+            <td :class="getPnLClass(trade.r_multiple)">
+              {{ trade.r_multiple != null ? trade.r_multiple.toFixed(2) + 'R' : '-' }}
+            </td>
+            <td>{{ trade.days_held != null ? trade.days_held + 'd' : '-' }}</td>
+            <td>{{ trade.leverage != null ? trade.leverage + 'x' : '-' }}</td>
             <td>{{ trade.strategy_name || 'N/A' }}</td>
             <td>
               <span class="badge" :class="`badge-${trade.status.toLowerCase()}`">
@@ -171,14 +186,9 @@ export default {
     const searchQuery = ref('');
     const statusFilter = ref('');
     const symbolFilter = ref('');
-    const strategyFilter = ref('donchian_channel');
-    const startDate = ref((() => {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      return `${year}-${month}-01`;
-    })());
-    const endDate = ref(new Date().toISOString().split('T')[0]);
+    const strategyFilter = ref('');
+    const startDate = ref('');
+    const endDate = ref('');
     const sortColumn = ref('entry_timestamp');
     const sortDirection = ref('desc');
     const selectedTrade = ref(null);
@@ -297,7 +307,7 @@ export default {
       searchQuery.value = '';
       statusFilter.value = '';
       symbolFilter.value = '';
-      strategyFilter.value = 'donchian_channel';
+      strategyFilter.value = '';
       startDate.value = '';
       endDate.value = '';
     };

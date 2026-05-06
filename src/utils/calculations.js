@@ -150,15 +150,19 @@ export function calculateCumulativePnL(trades) {
   const closedTrades = trades
     .filter((t) => t.status === 'CLOSED' && typeof t.pnl === 'number')
     .sort((a, b) => {
-      const dateA = a.exit_timestamp?.toDate?.() || new Date(a.exit_timestamp);
-      const dateB = b.exit_timestamp?.toDate?.() || new Date(b.exit_timestamp);
+      const rawA = a.exit_timestamp?.toDate?.() || (a.exit_timestamp ? new Date(a.exit_timestamp) : null);
+      const rawB = b.exit_timestamp?.toDate?.() || (b.exit_timestamp ? new Date(b.exit_timestamp) : null);
+      const dateA = (rawA && !isNaN(rawA)) ? rawA : (a.entry_timestamp?.toDate?.() || new Date(a.entry_timestamp));
+      const dateB = (rawB && !isNaN(rawB)) ? rawB : (b.entry_timestamp?.toDate?.() || new Date(b.entry_timestamp));
       return dateA - dateB;
     });
 
   let cumulative = 0;
   return closedTrades.map((trade) => {
     cumulative += trade.pnl;
-    const date = trade.exit_timestamp?.toDate?.() || new Date(trade.exit_timestamp);
+    const rawExit = trade.exit_timestamp?.toDate?.() || (trade.exit_timestamp ? new Date(trade.exit_timestamp) : null);
+    const rawEntry = trade.entry_timestamp?.toDate?.() || (trade.entry_timestamp ? new Date(trade.entry_timestamp) : null);
+    const date = (rawExit && !isNaN(rawExit)) ? rawExit : rawEntry || new Date();
     return {
       date,
       cumulativePnL: cumulative,
@@ -216,7 +220,10 @@ export function calculateMonthlyBreakdown(trades) {
   const closedTrades = trades.filter(t => t.status === 'CLOSED' && typeof t.pnl === 'number');
 
   closedTrades.forEach(trade => {
-    const exitDate = trade.exit_timestamp?.toDate?.() || new Date(trade.exit_timestamp);
+    const rawExit = trade.exit_timestamp?.toDate?.() || (trade.exit_timestamp ? new Date(trade.exit_timestamp) : null);
+    const rawEntry = trade.entry_timestamp?.toDate?.() || (trade.entry_timestamp ? new Date(trade.entry_timestamp) : null);
+    const exitDate = (rawExit && !isNaN(rawExit)) ? rawExit : rawEntry;
+    if (!exitDate || isNaN(exitDate)) return; // truly no date at all — skip
     const monthIndex = exitDate.getMonth();
 
     if (monthIndex >= 0 && monthIndex < 12) {
@@ -302,8 +309,10 @@ export function calculateStreaks(trades) {
   const closedTrades = trades
     .filter((t) => t.status === 'CLOSED' && typeof t.pnl === 'number')
     .sort((a, b) => {
-      const dateA = a.exit_timestamp?.toDate?.() || new Date(a.exit_timestamp);
-      const dateB = b.exit_timestamp?.toDate?.() || new Date(b.exit_timestamp);
+      const rawA = a.exit_timestamp?.toDate?.() || (a.exit_timestamp ? new Date(a.exit_timestamp) : null);
+      const rawB = b.exit_timestamp?.toDate?.() || (b.exit_timestamp ? new Date(b.exit_timestamp) : null);
+      const dateA = (rawA && !isNaN(rawA)) ? rawA : (a.entry_timestamp?.toDate?.() || new Date(a.entry_timestamp));
+      const dateB = (rawB && !isNaN(rawB)) ? rawB : (b.entry_timestamp?.toDate?.() || new Date(b.entry_timestamp));
       return dateA - dateB;
     });
 
@@ -392,7 +401,10 @@ export function calculateDailyPerformance(trades, daysToShow = 365) {
   const dailyData = {};
 
   closedTrades.forEach((trade) => {
-    const exitDate = trade.exit_timestamp?.toDate?.() || new Date(trade.exit_timestamp);
+    const rawExit = trade.exit_timestamp?.toDate?.() || (trade.exit_timestamp ? new Date(trade.exit_timestamp) : null);
+    const rawEntry = trade.entry_timestamp?.toDate?.() || (trade.entry_timestamp ? new Date(trade.entry_timestamp) : null);
+    const exitDate = (rawExit && !isNaN(rawExit)) ? rawExit : rawEntry;
+    if (!exitDate || isNaN(exitDate)) return;
     const dateKey = exitDate.toISOString().split('T')[0]; // YYYY-MM-DD
 
     if (!dailyData[dateKey]) {
@@ -477,7 +489,10 @@ export function calculateTimeBasedPerformance(trades) {
   }));
 
   closedTrades.forEach(trade => {
-    const exitDate = trade.exit_timestamp?.toDate?.() || new Date(trade.exit_timestamp);
+    const rawExit = trade.exit_timestamp?.toDate?.() || (trade.exit_timestamp ? new Date(trade.exit_timestamp) : null);
+    const rawEntry = trade.entry_timestamp?.toDate?.() || (trade.entry_timestamp ? new Date(trade.entry_timestamp) : null);
+    const exitDate = (rawExit && !isNaN(rawExit)) ? rawExit : rawEntry;
+    if (!exitDate || isNaN(exitDate)) return;
     const dayIndex = exitDate.getDay(); // 0 = Sunday
     const hourIndex = exitDate.getHours(); // 0-23
 
@@ -522,8 +537,10 @@ export function calculateMaxDrawdown(trades) {
 
   // Sort by exit time
   const sortedTrades = [...closedTrades].sort((a, b) => {
-    const timeA = a.exit_timestamp?.toDate?.() || new Date(a.exit_timestamp);
-    const timeB = b.exit_timestamp?.toDate?.() || new Date(b.exit_timestamp);
+    const rawA = a.exit_timestamp?.toDate?.() || (a.exit_timestamp ? new Date(a.exit_timestamp) : null);
+    const rawB = b.exit_timestamp?.toDate?.() || (b.exit_timestamp ? new Date(b.exit_timestamp) : null);
+    const timeA = (rawA && !isNaN(rawA)) ? rawA : (a.entry_timestamp?.toDate?.() || new Date(a.entry_timestamp));
+    const timeB = (rawB && !isNaN(rawB)) ? rawB : (b.entry_timestamp?.toDate?.() || new Date(b.entry_timestamp));
     return timeA - timeB;
   });
 
@@ -591,7 +608,10 @@ export function calculateDailyPnLMap(trades) {
   const dailyMap = {};
   trades.forEach(trade => {
     if (trade.status === 'CLOSED' && typeof trade.pnl === 'number') {
-      const exitDate = trade.exit_timestamp?.toDate?.() || new Date(trade.exit_timestamp);
+      const rawExit = trade.exit_timestamp?.toDate?.() || (trade.exit_timestamp ? new Date(trade.exit_timestamp) : null);
+      const rawEntry = trade.entry_timestamp?.toDate?.() || (trade.entry_timestamp ? new Date(trade.entry_timestamp) : null);
+      const exitDate = (rawExit && !isNaN(rawExit)) ? rawExit : rawEntry;
+      if (!exitDate || isNaN(exitDate)) return;
       const dateKey = exitDate.toISOString().split('T')[0];
       dailyMap[dateKey] = (dailyMap[dateKey] || 0) + trade.pnl;
     }

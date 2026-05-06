@@ -28,6 +28,12 @@
           Open Trades ({{ openTrades.length }})
         </button>
         <button
+          @click="activeTab = 'partial'"
+          :class="['btn btn-secondary', activeTab === 'partial' ? 'active-tab' : '']"
+        >
+          Partial Trades ({{ partialTrades.length }})
+        </button>
+        <button
           @click="activeTab = 'closed'"
           :class="['btn btn-secondary', activeTab === 'closed' ? 'active-tab' : '']"
         >
@@ -43,7 +49,7 @@
 <script>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import TradeList from './TradeList.vue';
-import { subscribeToTrades } from '../firebase/trades';
+import { subscribeToCryptoTrades } from '../firebase/crypto';
 
 export default {
   name: 'AllTrades',
@@ -57,61 +63,19 @@ export default {
     let unsubscribe = null;
 
     onMounted(() => {
-      unsubscribe = subscribeToTrades((newTrades) => {
-        const grouped = {};
-
-        newTrades.forEach(trade => {
-          // Since separate documents for Entry and Exit likely have DIFFERENT IDs,
-          // using trade.id as a key will not merge them.
-          // We need a key that is shared between the Entry and Exit record.
-          // Common candidates: a custom trade_id, or symbol + strategy + timestamp approximation.
-
-          let key = trade.trade_id;
-
-          if (!key) {
-            // Fallback: combine symbol, strategy, and a rounded entry timestamp to group
-            // the entry and exit together if they happened in the same window.
-            const symbol = trade.symbol || 'unknown';
-            const strategy = trade.strategy_name || 'unknown';
-            const timestamp = trade.entry_timestamp;
-
-            let dateKey = 'no-date';
-            if (timestamp) {
-              const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-              // Round to the nearest hour to account for slight differences in record timing
-              dateKey = new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours()).toISOString();
-            }
-
-            key = `${symbol}-${strategy}-${dateKey}`;
-          }
-
-          if (!grouped[key]) {
-            grouped[key] = trade;
-          } else {
-            const existing = grouped[key];
-            // Merge: CLOSED status always wins, and we combine all fields
-            if (trade.status === 'CLOSED' || existing.status === 'CLOSED') {
-              grouped[key] = {
-                ...existing,
-                ...trade,
-                status: 'CLOSED'
-              };
-            } else {
-              grouped[key] = { ...existing, ...trade };
-            }
-          }
-        });
-
-        trades.value = Object.values(grouped);
+      unsubscribe = subscribeToCryptoTrades((newTrades) => {
+        trades.value = newTrades;
         loading.value = false;
       });
     });
 
     const openTrades = computed(() => trades.value.filter(t => t.status === 'OPEN'));
+    const partialTrades = computed(() => trades.value.filter(t => t.status === 'PARTIAL_CLOSED'));
     const closedTrades = computed(() => trades.value.filter(t => t.status === 'CLOSED'));
 
     const filteredTrades = computed(() => {
       if (activeTab.value === 'open') return openTrades.value;
+      if (activeTab.value === 'partial') return partialTrades.value;
       if (activeTab.value === 'closed') return closedTrades.value;
       return trades.value;
     });
@@ -127,6 +91,7 @@ export default {
       loading,
       activeTab,
       openTrades,
+      partialTrades,
       closedTrades,
       filteredTrades,
     };

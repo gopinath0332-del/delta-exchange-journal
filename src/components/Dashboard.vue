@@ -6,6 +6,11 @@
       <p>Track, analyze, and improve your trading performance</p>
     </div>
 
+    <!-- Trade Counter -->
+    <div class="mb-xl">
+      <TradeCounter :totalTrades="trades.length" />
+    </div>
+
     <!-- Global Year Filter -->
     <div class="global-filter-bar mb-xl">
       <div class="filter-group">
@@ -148,6 +153,7 @@ import StatsCard from './StatsCard.vue';
 import TradeList from './TradeList.vue';
 import PnLChart from './PnLChart.vue';
 import PnLBreakdown from './PnLBreakdown.vue';
+import TradeCounter from './TradeCounter.vue';
 import {
   calculateTotalPnL,
   calculateWinRate,
@@ -172,6 +178,7 @@ export default {
     PnLChart,
     PnLBreakdown,
     MonthlyBreakdownCard,
+    TradeCounter,
   },
   props: {
     trades: {

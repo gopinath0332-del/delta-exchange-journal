@@ -51,7 +51,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import Dashboard from './components/Dashboard.vue';
 import Analytics from './components/Analytics.vue';
 import AllTrades from './components/AllTrades.vue';
-import { subscribeToTrades } from './firebase/trades';
+import { subscribeToCryptoTrades } from './firebase/crypto';
 
 export default {
   name: 'App',
@@ -86,7 +86,7 @@ export default {
         document.documentElement.classList.add('light-theme');
       }
 
-      unsubscribe = subscribeToTrades((newTrades) => {
+      unsubscribe = subscribeToCryptoTrades((newTrades) => {
         trades.value = newTrades;
       });
     });
