@@ -47,8 +47,12 @@ export default {
     const dayStats = computed(() => {
       if (!props.trades.length) return [];
       const { byDay } = calculateTimeBasedPerformance(props.trades);
-      // Sort by absolute PnL descending
-      return byDay.sort((a, b) => Math.abs(b.pnl) - Math.abs(a.pnl));
+      // Sort chronologically from Sunday to Saturday
+      const dayOrder = {
+        'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 
+        'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6
+      };
+      return byDay.sort((a, b) => dayOrder[a.name] - dayOrder[b.name]);
     });
 
     const maxAbsPnL = computed(() => {
