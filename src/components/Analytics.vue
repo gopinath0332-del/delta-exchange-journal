@@ -58,9 +58,10 @@
       <CalendarHeatmap :trades="yearTrades" />
     </div>
 
-    <!-- Time Analysis -->
-    <div class="mb-xl">
-      <TimeAnalysis :trades="yearTrades" />
+    <!-- Symbol Performance -->
+    <div class="glass-card p-xl mb-xl">
+      <h3 class="mb-md">Symbol Performance</h3>
+      <PnLBreakdown :trades="yearTrades" :showMonthFilter="false" />
     </div>
 
     <!-- Performance Ratio Metrics -->
@@ -104,11 +105,8 @@
         <StrategyPerformance :trades="yearTrades" />
       </div>
 
-      <!-- Symbol Performance -->
-      <div class="glass-card p-xl">
-        <h3 class="mb-md">Symbol Performance</h3>
-        <PnLBreakdown :trades="yearTrades" :showMonthFilter="false" />
-      </div>
+      <!-- Time Analysis -->
+      <TimeAnalysis :trades="yearTrades" />
     </div>
 
     <!-- Best & Worst Trades -->
