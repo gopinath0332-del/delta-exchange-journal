@@ -8,11 +8,11 @@ import { DateTime } from 'luxon';
  * @returns {string} Formatted currency string
  */
 export function formatCurrency(value, currency = '$') {
-  if (typeof value !== 'number' || isNaN(value)) return `${currency}0.00`;
+  if (typeof value !== 'number' || isNaN(value)) return `${currency}0.0000`;
 
   const isNegative = value < 0;
   const absValue = Math.abs(value);
-  const formatted = absValue.toFixed(2);
+  const formatted = absValue.toFixed(4);
 
   return `${isNegative ? '-' : ''}${currency}${formatted}`;
 }
@@ -131,7 +131,7 @@ export function formatTradeSide(side) {
  * @returns {string} Formatted number string
  */
 export function formatLargeNumber(value) {
-  if (typeof value !== 'number' || isNaN(value)) return '0';
+  if (typeof value !== 'number' || isNaN(value)) return '0.00';
 
   const absValue = Math.abs(value);
   const sign = value < 0 ? '-' : '';
