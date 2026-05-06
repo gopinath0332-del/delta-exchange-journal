@@ -114,17 +114,7 @@ export default {
       );
       const data = cumulativeData.map((d) => d.cumulativePnL);
 
-      const finalPnL = data[data.length - 1] || 0;
-      const lineColor = finalPnL >= 0 ? '#22c55e' : '#ef4444';
-      const gradientColor = finalPnL >= 0
-        ? 'rgba(34, 197, 94, 0.2)'
-        : 'rgba(239, 68, 68, 0.2)';
-
       const ctx = chartCanvas.value.getContext('2d');
-
-      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-      gradient.addColorStop(0, gradientColor);
-      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
       chartInstance = new Chart(ctx, {
         type: 'line',
@@ -134,14 +124,19 @@ export default {
             {
               label: 'Cumulative PnL',
               data,
-              borderColor: lineColor,
-              backgroundColor: gradient,
+              fill: {
+                target: 'origin',
+                above: 'rgba(34, 197, 94, 0.2)', // green fill above zero
+                below: 'rgba(239, 68, 68, 0.2)'  // red fill below zero
+              },
               borderWidth: 3,
-              fill: true,
               tension: 0.4,
               pointRadius: 4,
               pointHoverRadius: 6,
-              pointBackgroundColor: lineColor,
+              segment: {
+                borderColor: ctx => ctx.p1.parsed.y < 0 ? '#ef4444' : '#22c55e'
+              },
+              pointBackgroundColor: ctx => ctx.parsed && ctx.parsed.y < 0 ? '#ef4444' : '#22c55e',
               pointBorderColor: '#fff',
               pointBorderWidth: 2,
             },
