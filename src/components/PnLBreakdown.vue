@@ -1,10 +1,11 @@
 <template>
   <div class="pnl-breakdown">
-    <div class="chart-header">
+    <div v-if="showMonthFilter" class="chart-header">
       <div class="filters-row">
         <div class="filter-group">
           <label for="monthFilter">Month</label>
           <select v-model="selectedMonth" id="monthFilter" class="select select-sm">
+            <option value="all">Entire Year</option>
             <option v-for="month in months" :key="month.value" :value="month.value">
               {{ month.label }}
             </option>
@@ -33,6 +34,10 @@ export default {
       type: Array,
       required: true,
     },
+    showMonthFilter: {
+      type: Boolean,
+      default: true,
+    },
   },
   setup(props) {
     const chartCanvas = ref(null);
@@ -60,6 +65,11 @@ export default {
     });
 
     watch([() => props.trades], () => {
+      if (!props.showMonthFilter) {
+        selectedMonth.value = 'all';
+        return;
+      }
+
       const now = new Date();
       const currentMonthVal = String(now.getMonth() + 1).padStart(2, '0');
       const hasCurrentMonth = months.value.some(m => m.value === currentMonthVal);
