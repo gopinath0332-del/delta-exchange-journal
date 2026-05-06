@@ -1,150 +1,185 @@
 <template>
   <div class="analytics fade-in">
     <!-- Header -->
-    <div class="analytics-header flex justify-between items-center mb-2xl">
-      <div>
+    <div class="analytics-header mb-2xl">
+      <div class="header-info">
         <h1>Analytics</h1>
         <p>Deep dive into your trading performance and statistics</p>
       </div>
-      <!-- Year Filter -->
-      <div class="filter-group">
-        <label for="analyticsYearFilter" class="mr-sm text-sm text-muted">Year</label>
-        <select v-model="selectedYear" id="analyticsYearFilter" class="select">
-          <option v-for="year in years" :key="year" :value="year">
-            {{ year }}
-          </option>
-        </select>
+
+      <div class="header-controls">
+        <div class="sub-tab-nav">
+          <button 
+            v-for="tab in subTabs" 
+            :key="tab.id"
+            @click="activeSubTab = tab.id"
+            :class="['sub-tab-btn', { active: activeSubTab === tab.id }]"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
+        <div class="filter-group">
+          <label for="analyticsYearFilter" class="mr-sm text-sm text-muted">Year</label>
+          <select v-model="selectedYear" id="analyticsYearFilter" class="select select-sm">
+            <option v-for="year in years" :key="year" :value="year">
+              {{ year }}
+            </option>
+          </select>
+        </div>
       </div>
     </div>
 
-    <!-- Streak & Risk Statistics -->
-    <div class="grid grid-cols-4 mb-xl">
-      <StatsCard
-        label="Current Streak"
-        :value="currentStreakInfo.count"
-        :valueClass="currentStreakInfo.type === 'win' ? 'profit' : currentStreakInfo.type === 'loss' ? 'loss' : 'neutral'"
-        :icon="currentStreakInfo.emoji"
-        :iconBg="currentStreakInfo.type === 'win' ? 'var(--gradient-success)' : currentStreakInfo.type === 'loss' ? 'var(--gradient-danger)' : 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'"
-        :subtitle="currentStreakInfo.message"
-      />
-      <StatsCard
-        label="Longest Win Streak"
-        :value="streakStats.longestWinStreak"
-        valueClass="profit"
-        icon="🔥"
-        iconBg="var(--gradient-success)"
-        subtitle="Best winning run"
-      />
-      <StatsCard
-        label="Longest Loss Streak"
-        :value="streakStats.longestLossStreak"
-        valueClass="loss"
-        icon="❄️"
-        iconBg="var(--gradient-danger)"
-        subtitle="Worst losing run"
-      />
-      <StatsCard
-        label="Max Drawdown"
-        :value="'-' + formatCurrency(maxDrawdown).replace('$', '')"
-        valueClass="loss"
-        icon="📉"
-        iconBg="var(--gradient-danger)"
-        subtitle="Largest peak-to-trough drop"
-      />
-      <StatsCard
-        label="Discipline Score"
-        :value="avgDisciplineScore !== null ? avgDisciplineScore.toFixed(0) : 'N/A'"
-        :valueClass="avgDisciplineScore === null ? 'neutral' : (avgDisciplineScore >= 80 ? 'profit' : avgDisciplineScore >= 60 ? 'neutral' : 'loss')"
-        icon="🧠"
-        :iconBg="avgDisciplineScore === null ? 'var(--gradient-card)' : (avgDisciplineScore >= 80 ? 'var(--gradient-success)' : avgDisciplineScore >= 60 ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' : 'var(--gradient-danger)')"
-        subtitle="Avg adherence to plan"
-        tooltip="Measures adherence to your 1R risk plan. Penalties apply for losing >1R (moving stops) or capturing <2R on winners (early exits)."
-      />
-    </div>
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- OVERVIEW TAB -->
+      <div v-if="activeSubTab === 'overview'" class="fade-in">
+        <!-- Performance Ratio Metrics -->
+        <div class="grid grid-cols-3 mb-xl">
+          <StatsCard
+            label="Win Rate"
+            :value="formatPercentage(winRate)"
+            :valueClass="winRate >= 50 ? 'profit' : 'loss'"
+            icon="🎯"
+            :iconBg="winRate >= 50 ? 'var(--gradient-success)' : 'var(--gradient-danger)'"
+            subtitle="Percentage of profitable trades"
+          />
+          <StatsCard
+            label="Profit Factor"
+            :value="profitFactor.toFixed(2)"
+            :valueClass="profitFactor >= 1.5 ? 'profit' : profitFactor >= 1 ? 'neutral' : 'loss'"
+            icon="💰"
+            :iconBg="profitFactor >= 1.5 ? 'var(--gradient-success)' : profitFactor >= 1 ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' : 'var(--gradient-danger)'"
+            subtitle="Gross Profit / Gross Loss"
+          />
+          <StatsCard
+            label="Risk/Reward"
+            :value="riskRewardRatio.toFixed(2)"
+            :valueClass="riskRewardRatio >= 1.5 ? 'profit' : riskRewardRatio >= 1 ? 'neutral' : 'loss'"
+            icon="⚖️"
+            :iconBg="riskRewardRatio >= 1.5 ? 'var(--gradient-success)' : riskRewardRatio >= 1 ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' : 'var(--gradient-danger)'"
+            subtitle="Avg Win / Avg Loss"
+          />
+        </div>
 
-    <!-- Calendar Heatmap -->
-    <div class="glass-card p-xl mb-xl">
-      <CalendarHeatmap :trades="yearTrades" />
-    </div>
+        <!-- Behavioral & Risk Analysis Group -->
+        <div class="section-group mb-xl">
+          <div class="flex-between mb-md px-sm">
+            <h3 class="text-sm uppercase tracking-wider text-tertiary">Psychology & Risk Momentum</h3>
+            <span class="text-xs text-muted">Behavioral health indicators</span>
+          </div>
+          <div class="grid grid-cols-5 gap-md">
+            <StatsCard
+              label="Current Streak"
+              :value="currentStreakInfo.count"
+              :valueClass="currentStreakInfo.type === 'win' ? 'profit' : currentStreakInfo.type === 'loss' ? 'loss' : 'neutral'"
+              :icon="currentStreakInfo.emoji"
+              :iconBg="currentStreakInfo.type === 'win' ? 'var(--gradient-success)' : currentStreakInfo.type === 'loss' ? 'var(--gradient-danger)' : 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'"
+              :subtitle="currentStreakInfo.message"
+            />
+            <StatsCard
+              label="Longest Win"
+              :value="streakStats.longestWinStreak"
+              valueClass="profit"
+              icon="🔥"
+              iconBg="var(--gradient-success)"
+              subtitle="Best run"
+            />
+            <StatsCard
+              label="Longest Loss"
+              :value="streakStats.longestLossStreak"
+              valueClass="loss"
+              icon="❄️"
+              iconBg="var(--gradient-danger)"
+              subtitle="Worst run"
+            />
+            <StatsCard
+              label="Max Drawdown"
+              :value="'-' + formatCurrency(maxDrawdown).replace('$', '')"
+              valueClass="loss"
+              icon="📉"
+              iconBg="var(--gradient-danger)"
+              subtitle="Peak drop"
+            />
+            <StatsCard
+              label="Discipline"
+              :value="avgDisciplineScore !== null ? avgDisciplineScore.toFixed(0) : 'N/A'"
+              :valueClass="avgDisciplineScore === null ? 'neutral' : (avgDisciplineScore >= 80 ? 'profit' : avgDisciplineScore >= 60 ? 'neutral' : 'loss')"
+              icon="🧠"
+              :iconBg="avgDisciplineScore === null ? 'var(--gradient-card)' : (avgDisciplineScore >= 80 ? 'var(--gradient-success)' : avgDisciplineScore >= 60 ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' : 'var(--gradient-danger)')"
+              subtitle="Plan adherence"
+              tooltip="Measures adherence to your 1R risk plan. Penalties apply for losing >1R (moving stops) or capturing <2R on winners (early exits)."
+            />
+          </div>
+        </div>
 
-    <!-- Symbol Performance Chart -->
-    <div class="glass-card p-xl mb-xl">
-      <h3 class="mb-md">Symbol Performance (PnL Distribution)</h3>
-      <PnLBreakdown :trades="yearTrades" :showMonthFilter="false" />
-    </div>
-
-    <!-- Detailed Symbol Performance Table -->
-    <div class="glass-card p-xl mb-xl">
-      <h3 class="mb-md">Detailed Symbol Analysis</h3>
-      <SymbolPerformanceTable :trades="yearTrades" />
-    </div>
-
-    <!-- Performance Ratio Metrics -->
-    <div class="grid grid-cols-3 mb-xl">
-      <StatsCard
-        label="Win Rate"
-        :value="formatPercentage(winRate)"
-        :valueClass="winRate >= 50 ? 'profit' : 'loss'"
-        icon="🎯"
-        :iconBg="winRate >= 50 ? 'var(--gradient-success)' : 'var(--gradient-danger)'"
-        subtitle="Percentage of profitable trades"
-      />
-      <StatsCard
-        label="Profit Factor"
-        :value="profitFactor.toFixed(2)"
-        :valueClass="profitFactor >= 1.5 ? 'profit' : profitFactor >= 1 ? 'neutral' : 'loss'"
-        icon="💰"
-        :iconBg="profitFactor >= 1.5 ? 'var(--gradient-success)' : profitFactor >= 1 ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' : 'var(--gradient-danger)'"
-        subtitle="Gross Profit / Gross Loss"
-      />
-      <StatsCard
-        label="Risk/Reward"
-        :value="riskRewardRatio.toFixed(2)"
-        :valueClass="riskRewardRatio >= 1.5 ? 'profit' : riskRewardRatio >= 1 ? 'neutral' : 'loss'"
-        icon="⚖️"
-        :iconBg="riskRewardRatio >= 1.5 ? 'var(--gradient-success)' : riskRewardRatio >= 1 ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' : 'var(--gradient-danger)'"
-        subtitle="Avg Win / Avg Loss"
-      />
-    </div>
-
-    <!-- PnL Chart -->
-    <div class="glass-card p-xl mb-xl">
-      <h3 class="mb-md">Cumulative PnL Performance</h3>
-      <PnLChart :trades="yearTrades" :showMonthFilter="false" />
-    </div>
-
-    <!-- Win/Loss Streak Distribution -->
-    <div class="glass-card p-xl mb-xl">
-      <div class="flex-between mb-md">
-        <h3>Streak Distribution</h3>
-        <span class="text-xs text-muted">Frequency of consecutive wins vs. losses</span>
-      </div>
-      <StreakChart :trades="yearTrades" />
-    </div>
-
-    <div class="grid grid-cols-2 mb-xl">
-      <!-- Strategy Performance -->
-      <div class="glass-card p-xl">
-        <h3 class="mb-md">Strategy Performance</h3>
-        <StrategyPerformance :trades="yearTrades" />
+        <!-- PnL Chart -->
+        <div class="glass-card p-xl mb-xl">
+          <h3 class="mb-md">Cumulative PnL Performance</h3>
+          <PnLChart :trades="yearTrades" :showMonthFilter="false" />
+        </div>
       </div>
 
-      <!-- Time Analysis -->
-      <TimeAnalysis :trades="yearTrades" />
-    </div>
+      <!-- ASSETS TAB -->
+      <div v-if="activeSubTab === 'assets'" class="fade-in">
+        <!-- Strategy Performance -->
+        <div class="glass-card p-xl mb-xl">
+          <h3 class="mb-md">Strategy Performance</h3>
+          <StrategyPerformance :trades="yearTrades" />
+        </div>
 
-    <!-- Best & Worst Trades -->
-    <div class="grid grid-cols-2 mb-xl">
-      <div class="glass-card p-xl">
-        <h3 class="mb-md">🏆 Best Trade</h3>
-        <TradeCard v-if="bestTrade" :trade="bestTrade" compact />
-        <p v-else class="text-muted">No closed trades yet</p>
+        <!-- Symbol Performance Chart -->
+        <div class="glass-card p-xl mb-xl">
+          <h3 class="mb-md">Symbol Performance (PnL Distribution)</h3>
+          <PnLBreakdown :trades="yearTrades" :showMonthFilter="false" />
+        </div>
+
+        <!-- Detailed Symbol Performance Table -->
+        <div class="glass-card p-xl mb-xl">
+          <h3 class="mb-md">Detailed Symbol Analysis</h3>
+          <SymbolPerformanceTable :trades="yearTrades" />
+        </div>
       </div>
 
-      <div class="glass-card p-xl">
-        <h3 class="mb-md">📉 Worst Trade</h3>
-        <TradeCard v-if="worstTrade" :trade="worstTrade" compact />
-        <p v-else class="text-muted">No closed trades yet</p>
+      <!-- INSIGHTS TAB -->
+      <div v-if="activeSubTab === 'insights'" class="fade-in">
+        <!-- Win/Loss Streak Distribution -->
+        <div class="glass-card p-xl mb-xl">
+          <div class="flex-between mb-md">
+            <h3>Streak Distribution</h3>
+            <span class="text-xs text-muted">Frequency of consecutive wins vs. losses</span>
+          </div>
+          <StreakChart :trades="yearTrades" />
+        </div>
+
+        <!-- Time Analysis -->
+        <div class="glass-card p-xl mb-xl">
+          <h3 class="mb-md">Time-Based Performance</h3>
+          <TimeAnalysis :trades="yearTrades" />
+        </div>
+      </div>
+
+      <!-- ACTIVITY TAB -->
+      <div v-if="activeSubTab === 'activity'" class="fade-in">
+        <!-- Calendar Heatmap -->
+        <div class="glass-card p-xl mb-xl">
+          <h3 class="mb-md">Trading Activity Calendar</h3>
+          <CalendarHeatmap :trades="yearTrades" />
+        </div>
+
+        <!-- Best & Worst Trades -->
+        <div class="grid grid-cols-2 mb-xl">
+          <div class="glass-card p-xl">
+            <h3 class="mb-md">🏆 Best Trade</h3>
+            <TradeCard v-if="bestTrade" :trade="bestTrade" compact />
+            <p v-else class="text-muted">No closed trades yet</p>
+          </div>
+
+          <div class="glass-card p-xl">
+            <h3 class="mb-md">📉 Worst Trade</h3>
+            <TradeCard v-if="worstTrade" :trade="worstTrade" compact />
+            <p v-else class="text-muted">No closed trades yet</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -195,6 +230,14 @@ export default {
     },
   },
   setup(props) {
+    const activeSubTab = ref('overview');
+    const subTabs = [
+      { id: 'overview', label: 'Overview' },
+      { id: 'assets', label: 'Assets & Strategies' },
+      { id: 'insights', label: 'Insights' },
+      { id: 'activity', label: 'Activity' },
+    ];
+
     const selectedYear = ref(new Date().getFullYear());
 
     const years = computed(() => {
@@ -245,6 +288,8 @@ export default {
     });
 
     return {
+      activeSubTab,
+      subTabs,
       selectedYear,
       years,
       yearTrades,
@@ -270,21 +315,73 @@ export default {
 }
 
 .analytics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-lg);
   margin-bottom: var(--spacing-2xl);
-  text-align: center;
 }
 
-.analytics-header h1 {
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.header-info {
+  text-align: left;
+}
+
+.header-info h1 {
   background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-2xl);
 }
 
-.analytics-header p {
+.header-info p {
   color: var(--color-text-tertiary);
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-sm);
+}
+
+.sub-tab-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sub-tab-btn:hover {
+  color: var(--color-text-primary);
+}
+
+.sub-tab-btn.active {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.tab-content {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .text-muted {
