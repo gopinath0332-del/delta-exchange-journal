@@ -146,13 +146,13 @@
         <MonthlyBreakdownCard :data="monthlyBreakdown" />
       </div>
 
-      <!-- Recent Trades -->
+      <!-- Open Trades -->
       <div class="glass-card p-xl">
         <div class="flex justify-between items-center mb-lg">
-          <h3>Recent Trades</h3>
+          <h3>Open Trades</h3>
           <router-link to="/trades" class="btn btn-secondary">View All</router-link>
         </div>
-        <TradeList :trades="recentTrades" :limit="5" />
+        <TradeList :trades="openTrades" :limit="5" />
       </div>
     </div>
   </template>
