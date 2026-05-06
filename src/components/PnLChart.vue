@@ -161,7 +161,7 @@ export default {
               callbacks: {
                 label: (context) => {
                   const value = context.parsed.y;
-                  return `PnL: $${value.toFixed(2)}`;
+                  return `PnL: $${value.toFixed(4)}`;
                 },
               },
             },

@@ -69,18 +69,18 @@
       <div v-if="trade.r_multiple != null" class="detail-row">
         <span class="detail-label">R-Multiple</span>
         <span class="detail-value" :class="trade.r_multiple >= 0 ? 'profit' : 'loss'">
-          {{ trade.r_multiple.toFixed(2) }}R
+          {{ trade.r_multiple.toFixed(4) }}R
         </span>
       </div>
 
       <div v-if="trade.mae_pct != null" class="detail-row">
         <span class="detail-label">MAE %</span>
-        <span class="detail-value loss">{{ trade.mae_pct.toFixed(2) }}%</span>
+        <span class="detail-value loss">{{ trade.mae_pct.toFixed(4) }}%</span>
       </div>
 
       <div v-if="trade.mfe_pct != null" class="detail-row">
         <span class="detail-label">MFE %</span>
-        <span class="detail-value profit">{{ trade.mfe_pct.toFixed(2) }}%</span>
+        <span class="detail-value profit">{{ trade.mfe_pct.toFixed(4) }}%</span>
       </div>
 
       <div v-if="trade.leverage != null" class="detail-row">
