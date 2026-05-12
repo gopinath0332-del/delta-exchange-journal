@@ -49,7 +49,7 @@
 <script>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import TradeList from './TradeList.vue';
-import { subscribeToCryptoTrades } from '../firebase/crypto';
+import { subscribeToNoStoplossTrades } from '../firebase/noStoploss';
 
 export default {
   name: 'AllTrades',
@@ -63,7 +63,7 @@ export default {
     let unsubscribe = null;
 
     onMounted(() => {
-      unsubscribe = subscribeToCryptoTrades((newTrades) => {
+      unsubscribe = subscribeToNoStoplossTrades((newTrades) => {
         trades.value = newTrades;
         loading.value = false;
       });

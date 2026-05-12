@@ -56,7 +56,7 @@ import Dashboard from './components/Dashboard.vue';
 import Analytics from './components/Analytics.vue';
 import AllTrades from './components/AllTrades.vue';
 import CalendarView from './components/CalendarView.vue';
-import { subscribeToCryptoTrades } from './firebase/crypto';
+import { subscribeToNoStoplossTrades } from './firebase/noStoploss';
 
 export default {
   name: 'App',
@@ -92,7 +92,7 @@ export default {
         document.documentElement.classList.add('light-theme');
       }
 
-      unsubscribe = subscribeToCryptoTrades((newTrades) => {
+      unsubscribe = subscribeToNoStoplossTrades((newTrades) => {
         trades.value = newTrades;
       });
     });
