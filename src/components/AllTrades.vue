@@ -49,7 +49,8 @@
 <script>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import TradeList from './TradeList.vue';
-import { subscribeToNoStoplossTrades } from '../firebase/noStoploss';
+import { subscribeToTrades } from '../firebase/tradeService';
+import { TRADE_COLLECTION } from '../firebase/constants';
 
 export default {
   name: 'AllTrades',
@@ -63,7 +64,7 @@ export default {
     let unsubscribe = null;
 
     onMounted(() => {
-      unsubscribe = subscribeToNoStoplossTrades((newTrades) => {
+      unsubscribe = subscribeToTrades(TRADE_COLLECTION, (newTrades) => {
         trades.value = newTrades;
         loading.value = false;
       });

@@ -1,4 +1,4 @@
-// Firestore queries and data fetching functions for the 'crypto' collection
+// Generic Firestore queries and data fetching functions for trade collections
 import { db } from './config';
 import {
   collection,
@@ -11,13 +11,20 @@ import {
 } from 'firebase/firestore';
 
 /**
- * Subscribe to all crypto trades with real-time updates
+ * Get a reference to a collection
+ * @param {string} collectionName 
+ * @returns CollectionReference
+ */
+const getRef = (collectionName) => collection(db, collectionName);
+
+/**
+ * Subscribe to trades with real-time updates
+ * @param {string} collectionName - Name of the Firestore collection
  * @param {Function} callback - Function to call when trades update
  * @returns {Function} Unsubscribe function
  */
-export function subscribeToCryptoTrades(callback) {
-  const cryptoRef = collection(db, 'crypto');
-  const q = query(cryptoRef, orderBy('entry_timestamp', 'desc'));
+export function subscribeToTrades(collectionName, callback) {
+  const q = query(getRef(collectionName), orderBy('entry_timestamp', 'desc'));
 
   return onSnapshot(
     q,
@@ -32,22 +39,22 @@ export function subscribeToCryptoTrades(callback) {
       callback(trades);
     },
     (error) => {
-      console.error('Error subscribing to crypto collection:', error);
+      console.error(`Error subscribing to ${collectionName}:`, error);
       callback([]);
     }
   );
 }
 
 /**
- * Subscribe to crypto trades filtered by status
- * @param {string} status - 'OPEN' or 'CLOSED'
- * @param {Function} callback - Function to call when trades update
+ * Subscribe to trades filtered by status
+ * @param {string} collectionName 
+ * @param {string} status - 'OPEN', 'CLOSED', 'PARTIAL_CLOSED'
+ * @param {Function} callback 
  * @returns {Function} Unsubscribe function
  */
-export function subscribeToCryptoTradesByStatus(status, callback) {
-  const cryptoRef = collection(db, 'crypto');
+export function subscribeToTradesByStatus(collectionName, status, callback) {
   const q = query(
-    cryptoRef,
+    getRef(collectionName),
     where('status', '==', status),
     orderBy('entry_timestamp', 'desc')
   );
@@ -65,22 +72,22 @@ export function subscribeToCryptoTradesByStatus(status, callback) {
       callback(trades);
     },
     (error) => {
-      console.error(`Error subscribing to crypto trades by status (${status}):`, error);
+      console.error(`Error subscribing to ${collectionName} by status (${status}):`, error);
       callback([]);
     }
   );
 }
 
 /**
- * Subscribe to crypto trades filtered by symbol
- * @param {string} symbol - e.g., 'ETHUSD', 'BTCUSD'
- * @param {Function} callback - Function to call when trades update
+ * Subscribe to trades filtered by symbol
+ * @param {string} collectionName 
+ * @param {string} symbol 
+ * @param {Function} callback 
  * @returns {Function} Unsubscribe function
  */
-export function subscribeToCryptoTradesBySymbol(symbol, callback) {
-  const cryptoRef = collection(db, 'crypto');
+export function subscribeToTradesBySymbol(collectionName, symbol, callback) {
   const q = query(
-    cryptoRef,
+    getRef(collectionName),
     where('symbol', '==', symbol),
     orderBy('entry_timestamp', 'desc')
   );
@@ -98,22 +105,22 @@ export function subscribeToCryptoTradesBySymbol(symbol, callback) {
       callback(trades);
     },
     (error) => {
-      console.error(`Error subscribing to crypto trades by symbol (${symbol}):`, error);
+      console.error(`Error subscribing to ${collectionName} by symbol (${symbol}):`, error);
       callback([]);
     }
   );
 }
 
 /**
- * Subscribe to crypto trades filtered by strategy
- * @param {string} strategyName - Strategy name
- * @param {Function} callback - Function to call when trades update
+ * Subscribe to trades filtered by strategy
+ * @param {string} collectionName 
+ * @param {string} strategyName 
+ * @param {Function} callback 
  * @returns {Function} Unsubscribe function
  */
-export function subscribeToCryptoTradesByStrategy(strategyName, callback) {
-  const cryptoRef = collection(db, 'crypto');
+export function subscribeToTradesByStrategy(collectionName, strategyName, callback) {
   const q = query(
-    cryptoRef,
+    getRef(collectionName),
     where('strategy_name', '==', strategyName),
     orderBy('entry_timestamp', 'desc')
   );
@@ -131,22 +138,22 @@ export function subscribeToCryptoTradesByStrategy(strategyName, callback) {
       callback(trades);
     },
     (error) => {
-      console.error(`Error subscribing to crypto trades by strategy (${strategyName}):`, error);
+      console.error(`Error subscribing to ${collectionName} by strategy (${strategyName}):`, error);
       callback([]);
     }
   );
 }
 
 /**
- * Get crypto trades within a date range (one-time fetch)
- * @param {Date} startDate - Start date
- * @param {Date} endDate - End date
- * @returns {Promise<Array>} Array of trades
+ * Get trades within a date range (one-time fetch)
+ * @param {string} collectionName 
+ * @param {Date} startDate 
+ * @param {Date} endDate 
+ * @returns {Promise<Array>}
  */
-export async function getCryptoTradesByDateRange(startDate, endDate) {
-  const cryptoRef = collection(db, 'crypto');
+export async function getTradesByDateRange(collectionName, startDate, endDate) {
   const q = query(
-    cryptoRef,
+    getRef(collectionName),
     where('entry_timestamp', '>=', Timestamp.fromDate(startDate)),
     where('entry_timestamp', '<=', Timestamp.fromDate(endDate)),
     orderBy('entry_timestamp', 'desc')
@@ -165,13 +172,13 @@ export async function getCryptoTradesByDateRange(startDate, endDate) {
 }
 
 /**
- * Get all closed crypto trades (for statistics, one-time fetch)
- * @returns {Promise<Array>} Array of closed trades
+ * Get all closed trades (for statistics, one-time fetch)
+ * @param {string} collectionName 
+ * @returns {Promise<Array>}
  */
-export async function getAllClosedCryptoTrades() {
-  const cryptoRef = collection(db, 'crypto');
+export async function getAllClosedTrades(collectionName) {
   const q = query(
-    cryptoRef,
+    getRef(collectionName),
     where('status', '==', 'CLOSED'),
     orderBy('entry_timestamp', 'desc')
   );

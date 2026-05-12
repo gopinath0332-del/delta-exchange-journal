@@ -56,7 +56,8 @@ import Dashboard from './components/Dashboard.vue';
 import Analytics from './components/Analytics.vue';
 import AllTrades from './components/AllTrades.vue';
 import CalendarView from './components/CalendarView.vue';
-import { subscribeToNoStoplossTrades } from './firebase/noStoploss';
+import { subscribeToTrades } from './firebase/tradeService';
+import { TRADE_COLLECTION } from './firebase/constants';
 
 export default {
   name: 'App',
@@ -92,7 +93,7 @@ export default {
         document.documentElement.classList.add('light-theme');
       }
 
-      unsubscribe = subscribeToNoStoplossTrades((newTrades) => {
+      unsubscribe = subscribeToTrades(TRADE_COLLECTION, (newTrades) => {
         trades.value = newTrades;
       });
     });
