@@ -8,6 +8,8 @@ import {
   onSnapshot,
   getDocs,
   Timestamp,
+  doc,
+  updateDoc,
 } from 'firebase/firestore';
 
 /**
@@ -193,4 +195,33 @@ export async function getAllClosedTrades(collectionName) {
   });
 
   return trades;
+}
+
+/**
+ * Update a trade in Firestore
+ * @param {string} collectionName 
+ * @param {string} tradeId 
+ * @param {Object} updatedData 
+ * @returns {Promise<{success: boolean, error?: any}>}
+ */
+export async function updateTrade(collectionName, tradeId, updatedData) {
+  const tradeRef = doc(db, collectionName, tradeId);
+  try {
+    // Remove id from updatedData to avoid saving it back to document fields
+    const { id, ...dataToUpdate } = updatedData;
+    
+    // Ensure timestamps are correctly handled if they are strings from input
+    if (dataToUpdate.entry_timestamp && typeof dataToUpdate.entry_timestamp === 'string') {
+      dataToUpdate.entry_timestamp = Timestamp.fromDate(new Date(dataToUpdate.entry_timestamp));
+    }
+    if (dataToUpdate.exit_timestamp && typeof dataToUpdate.exit_timestamp === 'string') {
+      dataToUpdate.exit_timestamp = Timestamp.fromDate(new Date(dataToUpdate.exit_timestamp));
+    }
+
+    await updateDoc(tradeRef, dataToUpdate);
+    return { success: true };
+  } catch (error) {
+    console.error(`Error updating trade ${tradeId} in ${collectionName}:`, error);
+    return { success: false, error };
+  }
 }
