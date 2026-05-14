@@ -8,6 +8,8 @@ import {
   onSnapshot,
   getDocs,
   Timestamp,
+  doc,
+  updateDoc,
 } from 'firebase/firestore';
 
 /**
@@ -193,4 +195,48 @@ export async function getAllClosedTrades(collectionName) {
   });
 
   return trades;
+}
+
+/**
+ * Update a trade in Firestore
+ * @param {string} collectionName 
+ * @param {string} tradeId 
+ * @param {Object} updatedData 
+ * @returns {Promise<{success: boolean, error?: any}>}
+ */
+export async function updateTrade(collectionName, tradeId, updatedData) {
+  const tradeRef = doc(db, collectionName, tradeId);
+  try {
+    // Remove id from updatedData to avoid saving it back to document fields
+    const { id, ...dataToUpdate } = updatedData;
+    
+    // Convert top-level timestamps
+    if (dataToUpdate.entry_timestamp && typeof dataToUpdate.entry_timestamp === 'string') {
+      dataToUpdate.entry_timestamp = Timestamp.fromDate(new Date(dataToUpdate.entry_timestamp));
+    }
+    if (dataToUpdate.exit_timestamp && typeof dataToUpdate.exit_timestamp === 'string') {
+      dataToUpdate.exit_timestamp = Timestamp.fromDate(new Date(dataToUpdate.exit_timestamp));
+    }
+
+    // Convert timestamps inside the events array
+    if (Array.isArray(dataToUpdate.events)) {
+      dataToUpdate.events = dataToUpdate.events.map(event => {
+        const e = { ...event };
+        if (e.timestamp) {
+          if (typeof e.timestamp === 'string') {
+            e.timestamp = Timestamp.fromDate(new Date(e.timestamp));
+          } else if (e.timestamp instanceof Date) {
+            e.timestamp = Timestamp.fromDate(e.timestamp);
+          }
+        }
+        return e;
+      });
+    }
+
+    await updateDoc(tradeRef, dataToUpdate);
+    return { success: true };
+  } catch (error) {
+    console.error(`Error updating trade ${tradeId} in ${collectionName}:`, error);
+    return { success: false, error };
+  }
 }

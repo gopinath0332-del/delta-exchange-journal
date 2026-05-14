@@ -98,24 +98,24 @@
             <th>Strategy</th>
             <th>Status</th>
             <th>Mode</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr
             v-for="trade in displayedTrades"
             :key="trade.id"
-            @click="selectTrade(trade)"
             :class="['trade-row', getPnLClass(trade.pnl)]"
           >
-            <td class="font-semibold">{{ trade.symbol }}</td>
-            <td>{{ formatShortDate(trade.entry_timestamp) }}</td>
-            <td>
+            <td @click="selectTrade(trade)" class="font-semibold">{{ trade.symbol }}</td>
+            <td @click="selectTrade(trade)">{{ formatShortDate(trade.entry_timestamp) }}</td>
+            <td @click="selectTrade(trade)">
               <span :class="`side-${trade.entry_side}`">
                 {{ trade.entry_side?.toUpperCase() }}
               </span>
               @ {{ formatCurrency(trade.entry_price, '') }}
             </td>
-            <td>
+            <td @click="selectTrade(trade)">
               <span v-if="trade.status !== 'OPEN'">
                 <span :class="`side-${trade.exit_side}`">
                   {{ trade.exit_side?.toUpperCase() }}
@@ -124,24 +124,29 @@
               </span>
               <span v-else class="text-muted">-</span>
             </td>
-            <td :class="getPnLClass(trade.pnl)">
+            <td @click="selectTrade(trade)" :class="getPnLClass(trade.pnl)">
               {{ trade.status !== 'OPEN' ? formatCurrency(trade.pnl) : 'OPEN' }}
             </td>
-            <td :class="getPnLClass(trade.r_multiple)">
+            <td @click="selectTrade(trade)" :class="getPnLClass(trade.r_multiple)">
               {{ trade.r_multiple != null ? trade.r_multiple.toFixed(2) + 'R' : '-' }}
             </td>
-            <td>{{ trade.days_held != null ? trade.days_held + 'd' : '-' }}</td>
-            <td>{{ trade.leverage != null ? trade.leverage + 'x' : '-' }}</td>
-            <td>{{ trade.strategy_name || 'N/A' }}</td>
-            <td>
-              <span class="badge" :class="`badge-${trade.status.toLowerCase()}`">
-                {{ trade.status }}
+            <td @click="selectTrade(trade)">{{ trade.days_held != null ? trade.days_held + 'd' : '-' }}</td>
+            <td @click="selectTrade(trade)">{{ trade.leverage != null ? trade.leverage + 'x' : '-' }}</td>
+            <td @click="selectTrade(trade)">{{ trade.strategy_name || 'N/A' }}</td>
+            <td @click="selectTrade(trade)">
+              <span class="badge" :class="`badge-${getStatusDisplay(trade).cssClass}`">
+                {{ getStatusDisplay(trade).label }}
               </span>
             </td>
-            <td>
+            <td @click="selectTrade(trade)">
               <span class="badge" :class="`badge-${trade.mode?.toLowerCase()}`">
                 {{ trade.mode }}
               </span>
+            </td>
+            <td>
+              <button @click.stop="editTrade(trade)" class="btn-icon" title="Edit Trade">
+                ✏️
+              </button>
             </td>
           </tr>
         </tbody>
@@ -159,18 +164,32 @@
         <TradeCard :trade="selectedTrade" />
       </div>
     </div>
+
+    <!-- Trade Edit Modal (if editing) -->
+    <div v-if="editingTrade" class="modal-overlay" @click="editingTrade = null">
+      <div class="modal-content" @click.stop>
+        <button class="modal-close" @click="editingTrade = null">×</button>
+        <TradeEditForm 
+          :trade="editingTrade" 
+          @updated="onTradeUpdated" 
+          @cancel="editingTrade = null" 
+        />
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import { ref, computed } from 'vue';
 import TradeCard from './TradeCard.vue';
+import TradeEditForm from './TradeEditForm.vue';
 import { formatCurrency, formatShortDate } from '../utils/formatters';
 
 export default {
   name: 'TradeList',
   components: {
     TradeCard,
+    TradeEditForm,
   },
   props: {
     trades: {
@@ -192,6 +211,7 @@ export default {
     const sortColumn = ref('entry_timestamp');
     const sortDirection = ref('desc');
     const selectedTrade = ref(null);
+    const editingTrade = ref(null);
 
     // Get unique values for filters
     const uniqueSymbols = computed(() => {
@@ -321,6 +341,19 @@ export default {
       selectedTrade.value = trade;
     };
 
+    // Determine display status — detects milestone exits from events array
+    const getStatusDisplay = (trade) => {
+      if (trade.status === 'PARTIAL_CLOSED') {
+        const events = trade.events || [];
+        const exitEvents = events.filter(e => !String(e.action || '').includes('ENTRY'));
+        const hasMilestone = exitEvents.some(e => String(e.action || '').includes('MILESTONE'));
+        const allMilestone = exitEvents.length > 0 && exitEvents.every(e => String(e.action || '').includes('MILESTONE'));
+        if (allMilestone) return { label: 'MILESTONE', cssClass: 'milestone' };
+        if (hasMilestone) return { label: 'MILESTONE+PARTIAL', cssClass: 'milestone' };
+      }
+      return { label: trade.status, cssClass: trade.status.toLowerCase() };
+    };
+
     return {
       searchQuery,
       statusFilter,
@@ -340,8 +373,16 @@ export default {
       clearFilters,
       getPnLClass,
       selectTrade,
+      getStatusDisplay,
       formatCurrency,
       formatShortDate,
+      editingTrade,
+      editTrade(trade) {
+        editingTrade.value = trade;
+      },
+      onTradeUpdated() {
+        editingTrade.value = null;
+      },
     };
   },
 };
@@ -455,7 +496,7 @@ export default {
 }
 
 .modal-content {
-  max-width: 600px;
+  max-width: 680px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
@@ -485,6 +526,27 @@ export default {
 .modal-close:hover {
   background: var(--color-surface-hover);
   transform: rotate(90deg);
+}
+
+.btn-icon {
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--glass-border);
+  color: var(--color-text-primary);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  font-size: 1rem;
+}
+
+.btn-icon:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary);
+  transform: scale(1.1);
 }
 
 @media (max-width: 768px) {
