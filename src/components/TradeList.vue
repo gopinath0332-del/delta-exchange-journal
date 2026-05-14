@@ -482,7 +482,7 @@ export default {
 }
 
 .modal-content {
-  max-width: 600px;
+  max-width: 680px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
