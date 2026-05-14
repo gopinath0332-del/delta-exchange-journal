@@ -644,7 +644,7 @@ export default {
 }
 
 .event-entry    { border-left-color: var(--color-primary); }
-.event-milestone { border-left-color: #06b6d4; }
+.event-milestone { border-left-color: #818cf8; }
 .event-partial  { border-left-color: var(--color-warning); }
 .event-exit     { border-left-color: var(--color-profit); }
 
@@ -676,7 +676,7 @@ export default {
 }
 
 .event-action-badge.event-entry     { background: rgba(102,126,234,0.15); color: var(--color-primary-light); }
-.event-action-badge.event-milestone  { background: rgba(6,182,212,0.15);   color: #22d3ee; }
+.event-action-badge.event-milestone  { background: rgba(102,126,234,0.18); color: #a5b4fc; }
 .event-action-badge.event-partial   { background: var(--color-warning-bg); color: var(--color-warning); }
 .event-action-badge.event-exit      { background: var(--color-profit-bg);  color: var(--color-profit); }
 .event-action-badge.event-neutral   { background: var(--color-surface);    color: var(--color-text-secondary); }

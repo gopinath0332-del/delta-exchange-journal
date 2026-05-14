@@ -263,35 +263,39 @@ p {
 }
 
 .badge-open {
-  background: var(--color-info-bg);
-  color: var(--color-info);
+  background: rgba(37, 99, 235, 0.75);
+  color: #ffffff;
+  border: 1px solid rgba(59, 130, 246, 0.6);
 }
 
 .badge-closed {
-  background: var(--color-text-muted);
-  color: var(--color-text-primary);
+  background: rgba(75, 85, 99, 0.75);
+  color: #ffffff;
+  border: 1px solid rgba(107, 114, 128, 0.6);
 }
 
 .badge-paper {
-  background: var(--color-warning-bg);
-  color: var(--color-warning);
+  background: rgba(217, 119, 6, 0.75);
+  color: #ffffff;
+  border: 1px solid rgba(245, 158, 11, 0.6);
 }
 
 .badge-live {
-  background: var(--color-profit-bg);
-  color: var(--color-profit);
+  background: rgba(22, 163, 74, 0.75);
+  color: #ffffff;
+  border: 1px solid rgba(34, 197, 94, 0.6);
 }
 
 .badge-partial_closed {
-  background: var(--color-warning-bg);
-  color: var(--color-warning);
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: rgba(180, 83, 9, 0.75);
+  color: #ffffff;
+  border: 1px solid rgba(217, 119, 6, 0.6);
 }
 
 .badge-milestone {
-  background: rgba(6, 182, 212, 0.12);
-  color: #22d3ee;
-  border: 1px solid rgba(6, 182, 212, 0.3);
+  background: rgba(79, 70, 229, 0.75);
+  color: #ffffff;
+  border: 1px solid rgba(99, 102, 241, 0.6);
 }
 
 /* Side Badges (Buy/Sell) */
