@@ -134,8 +134,8 @@
             <td @click="selectTrade(trade)">{{ trade.leverage != null ? trade.leverage + 'x' : '-' }}</td>
             <td @click="selectTrade(trade)">{{ trade.strategy_name || 'N/A' }}</td>
             <td @click="selectTrade(trade)">
-              <span class="badge" :class="`badge-${trade.status.toLowerCase()}`">
-                {{ trade.status }}
+              <span class="badge" :class="`badge-${getStatusDisplay(trade).cssClass}`">
+                {{ getStatusDisplay(trade).label }}
               </span>
             </td>
             <td @click="selectTrade(trade)">
@@ -341,6 +341,19 @@ export default {
       selectedTrade.value = trade;
     };
 
+    // Determine display status — detects milestone exits from events array
+    const getStatusDisplay = (trade) => {
+      if (trade.status === 'PARTIAL_CLOSED') {
+        const events = trade.events || [];
+        const exitEvents = events.filter(e => !String(e.action || '').includes('ENTRY'));
+        const hasMilestone = exitEvents.some(e => String(e.action || '').includes('MILESTONE'));
+        const allMilestone = exitEvents.length > 0 && exitEvents.every(e => String(e.action || '').includes('MILESTONE'));
+        if (allMilestone) return { label: 'MILESTONE', cssClass: 'milestone' };
+        if (hasMilestone) return { label: 'MILESTONE+PARTIAL', cssClass: 'milestone' };
+      }
+      return { label: trade.status, cssClass: trade.status.toLowerCase() };
+    };
+
     return {
       searchQuery,
       statusFilter,
@@ -360,6 +373,7 @@ export default {
       clearFilters,
       getPnLClass,
       selectTrade,
+      getStatusDisplay,
       formatCurrency,
       formatShortDate,
       editingTrade,

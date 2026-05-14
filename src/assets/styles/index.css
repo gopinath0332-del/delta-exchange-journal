@@ -282,6 +282,18 @@ p {
   color: var(--color-profit);
 }
 
+.badge-partial_closed {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-milestone {
+  background: rgba(6, 182, 212, 0.12);
+  color: #22d3ee;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
 /* Side Badges (Buy/Sell) */
 .side-buy {
   color: var(--color-profit);

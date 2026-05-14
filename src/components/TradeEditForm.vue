@@ -305,7 +305,8 @@ export default {
     const getEventClass = (action) => {
       if (!action) return 'event-neutral';
       if (action.includes('ENTRY')) return 'event-entry';
-      if (action.includes('PARTIAL') || action.includes('MILESTONE')) return 'event-partial';
+      if (action === 'MILESTONE_EXIT' || action.includes('MILESTONE')) return 'event-milestone';
+      if (action.includes('PARTIAL')) return 'event-partial';
       return 'event-exit';
     };
 
@@ -642,9 +643,10 @@ export default {
   transition: all var(--transition-base);
 }
 
-.event-entry  { border-left-color: var(--color-primary); }
-.event-partial { border-left-color: var(--color-warning); }
-.event-exit    { border-left-color: var(--color-profit); }
+.event-entry    { border-left-color: var(--color-primary); }
+.event-milestone { border-left-color: #06b6d4; }
+.event-partial  { border-left-color: var(--color-warning); }
+.event-exit     { border-left-color: var(--color-profit); }
 
 .event-card-header {
   display: flex;
@@ -673,10 +675,11 @@ export default {
   letter-spacing: 0.5px;
 }
 
-.event-action-badge.event-entry  { background: rgba(102,126,234,0.15); color: var(--color-primary-light); }
-.event-action-badge.event-partial { background: var(--color-warning-bg); color: var(--color-warning); }
-.event-action-badge.event-exit    { background: var(--color-profit-bg); color: var(--color-profit); }
-.event-action-badge.event-neutral { background: var(--color-surface); color: var(--color-text-secondary); }
+.event-action-badge.event-entry     { background: rgba(102,126,234,0.15); color: var(--color-primary-light); }
+.event-action-badge.event-milestone  { background: rgba(6,182,212,0.15);   color: #22d3ee; }
+.event-action-badge.event-partial   { background: var(--color-warning-bg); color: var(--color-warning); }
+.event-action-badge.event-exit      { background: var(--color-profit-bg);  color: var(--color-profit); }
+.event-action-badge.event-neutral   { background: var(--color-surface);    color: var(--color-text-secondary); }
 
 .btn-remove-event {
   background: var(--color-loss-bg);
