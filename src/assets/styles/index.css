@@ -293,9 +293,9 @@ p {
 }
 
 .badge-milestone {
-  background: rgba(79, 70, 229, 0.75);
+  background: rgba(225, 29, 72, 0.75);
   color: #ffffff;
-  border: 1px solid rgba(99, 102, 241, 0.6);
+  border: 1px solid rgba(251, 113, 133, 0.6);
 }
 
 /* Side Badges (Buy/Sell) */
