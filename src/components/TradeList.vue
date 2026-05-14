@@ -105,7 +105,7 @@
           <tr
             v-for="trade in displayedTrades"
             :key="trade.id"
-            :class="['trade-row', getPnLClass(trade.pnl)]"
+            :class="['trade-row', trade.status === 'CLOSED' ? getPnLClass(trade.pnl) : 'neutral']"
           >
             <td @click="selectTrade(trade)" class="font-semibold">{{ trade.symbol }}</td>
             <td @click="selectTrade(trade)">{{ formatShortDate(trade.entry_timestamp) }}</td>
