@@ -675,11 +675,11 @@ export default {
   letter-spacing: 0.5px;
 }
 
-.event-action-badge.event-entry     { background: rgba(102,126,234,0.15); color: var(--color-primary-light); }
-.event-action-badge.event-milestone  { background: rgba(102,126,234,0.18); color: #a5b4fc; }
-.event-action-badge.event-partial   { background: var(--color-warning-bg); color: var(--color-warning); }
-.event-action-badge.event-exit      { background: var(--color-profit-bg);  color: var(--color-profit); }
-.event-action-badge.event-neutral   { background: var(--color-surface);    color: var(--color-text-secondary); }
+.event-action-badge.event-entry     { background: rgba(37, 99, 235, 0.75);  color: #ffffff; border: 1px solid rgba(59, 130, 246, 0.6); }
+.event-action-badge.event-milestone  { background: rgba(79, 70, 229, 0.75);  color: #ffffff; border: 1px solid rgba(99, 102, 241, 0.6); }
+.event-action-badge.event-partial   { background: rgba(180, 83, 9, 0.75);   color: #ffffff; border: 1px solid rgba(217, 119, 6, 0.6); }
+.event-action-badge.event-exit      { background: rgba(22, 163, 74, 0.75);  color: #ffffff; border: 1px solid rgba(34, 197, 94, 0.6); }
+.event-action-badge.event-neutral   { background: rgba(75, 85, 99, 0.75);   color: #ffffff; border: 1px solid rgba(107, 114, 128, 0.6); }
 
 .btn-remove-event {
   background: var(--color-loss-bg);
