@@ -426,6 +426,14 @@ export default {
   color: var(--color-text-muted);
 }
 
+@media (max-width: 640px) {
+  .form-header {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+  }
+}
+
 /* Tab Navigation */
 .tab-nav {
   display: flex;

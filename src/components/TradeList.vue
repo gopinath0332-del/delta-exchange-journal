@@ -509,6 +509,15 @@ export default {
   animation: slideIn 0.3s ease-out;
 }
 
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: var(--spacing-md);
+  }
+  .modal-content {
+    max-height: 95vh;
+  }
+}
+
 .modal-close {
   position: absolute;
   top: var(--spacing-md);

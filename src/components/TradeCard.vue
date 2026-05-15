@@ -279,17 +279,20 @@ export default {
   justify-content: space-between;
   align-items: center;
   font-size: var(--font-size-sm);
+  gap: var(--spacing-sm);
 }
 
 .detail-label {
   color: var(--color-text-tertiary);
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 .detail-value {
   color: var(--color-text-primary);
   font-weight: 600;
   text-align: right;
+  word-break: break-word;
 }
 
 .trade-notes {
