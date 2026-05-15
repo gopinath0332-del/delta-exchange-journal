@@ -7,12 +7,12 @@
     </div>
 
     <!-- Trade Counter -->
-    <div class="mb-xl">
+    <div class="mb-lg">
       <TradeCounter :totalTrades="trades.length" />
     </div>
 
     <!-- Global Year Filter -->
-    <div class="global-filter-bar mb-xl">
+    <div class="global-filter-bar mb-lg">
       <div class="filter-group">
         <label for="globalYearFilter">Year</label>
         <select v-model="selectedYear" id="globalYearFilter" class="select">
@@ -24,9 +24,9 @@
     </div>
 
     <!-- Key Stats Grid -->
-      <div class="space-y-xl mb-xl">
+      <div class="mb-lg">
         <!-- Hero Row: Always Visible -->
-        <div class="grid grid-cols-4">
+        <div class="grid grid-cols-4 mb-lg">
           <StatsCard
             label="Net PnL"
             :value="formatCurrency(totalPnL)"
@@ -105,7 +105,7 @@
       </div>
 
       <!-- Performance Charts -->
-      <div class="glass-card p-xl mb-xl flex flex-col">
+      <div class="glass-card p-xl mb-lg flex flex-col">
         <div class="flex justify-between items-center mb-lg">
           <h3>Yearly PnL Curve</h3>
           <div class="text-muted text-sm">Cumulative growth for {{ selectedYear }}</div>
@@ -115,7 +115,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-xl mb-xl">
+      <div class="grid grid-cols-2 gap-xl mb-lg">
         <div class="glass-card p-xl flex flex-col">
           <div class="flex justify-between items-center mb-lg">
             <h3>Monthly PnL Curve</h3>
@@ -138,7 +138,7 @@
       </div>
 
       <!-- Monthly Breakdown -->
-      <div class="glass-card p-xl mb-xl">
+      <div class="glass-card p-xl mb-lg">
         <div class="flex justify-between items-center mb-lg">
           <h3>Monthly Performance Breakdown</h3>
           <div class="text-muted text-sm">Detailed metrics by month for {{ selectedYear }}</div>
