@@ -882,5 +882,28 @@ export function calculateStreakDistribution(trades) {
     distribution[currentType][currentStreak] = (distribution[currentType][currentStreak] || 0) + 1;
   }
 
+
   return distribution;
+}
+
+/**
+ * Calculate the Sharpe Ratio (risk-adjusted return)
+ * @param {Array} trades - Array of trade objects
+ * @returns {number} Annualized Sharpe Ratio
+ */
+export function calculateSharpeRatio(trades) {
+  const dailyPnLMap = calculateDailyPnLMap(trades);
+  const values = Object.values(dailyPnLMap);
+
+  if (values.length === 0) return 0;
+
+  const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
+  const variance = values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length;
+  const stdDev = Math.sqrt(variance);
+
+  if (stdDev === 0) return 0;
+
+  const dailySharpe = mean / stdDev;
+  // Annualize for 24/7 trading (sqrt of 365 days)
+  return dailySharpe * Math.sqrt(365);
 }

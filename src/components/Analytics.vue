@@ -34,7 +34,7 @@
       <!-- OVERVIEW TAB -->
       <div v-if="activeSubTab === 'overview'" class="fade-in">
         <!-- Performance Ratio Metrics -->
-        <div class="grid grid-cols-3 mb-xl">
+        <div class="grid grid-cols-4 mb-xl">
           <StatsCard
             label="Win Rate"
             :value="formatPercentage(winRate)"
@@ -58,6 +58,14 @@
             icon="⚖️"
             :iconBg="riskRewardRatio >= 1.5 ? 'var(--gradient-success)' : riskRewardRatio >= 1 ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' : 'var(--gradient-danger)'"
             subtitle="Avg Win / Avg Loss"
+          />
+          <StatsCard
+            label="Sharpe Ratio"
+            :value="sharpeRatio.toFixed(2)"
+            :valueClass="sharpeRatio >= 1.0 ? 'profit' : sharpeRatio >= 0.5 ? 'neutral' : 'loss'"
+            icon="📈"
+            :iconBg="sharpeRatio >= 1.0 ? 'var(--gradient-success)' : sharpeRatio >= 0.5 ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' : 'var(--gradient-danger)'"
+            subtitle="Risk-adjusted return"
           />
         </div>
 
@@ -206,6 +214,7 @@ import {
   calculateRiskRewardRatio,
   calculateProfitFactor,
   calculateDisciplineScore,
+  calculateSharpeRatio,
 } from '../utils/calculations';
 
 import { formatCurrency, formatPercentage } from '../utils/formatters';
@@ -278,7 +287,8 @@ export default {
     const winRate = computed(() => calculateWinRate(closedTrades.value));
     const riskRewardRatio = computed(() => calculateRiskRewardRatio(closedTrades.value));
     const profitFactor = computed(() => calculateProfitFactor(closedTrades.value));
-    
+    const sharpeRatio = computed(() => calculateSharpeRatio(closedTrades.value));
+
     const avgDisciplineScore = computed(() => {
       const scores = closedTrades.value
         .map(t => calculateDisciplineScore(t))
@@ -301,6 +311,7 @@ export default {
       winRate,
       riskRewardRatio,
       profitFactor,
+      sharpeRatio,
       avgDisciplineScore,
       formatCurrency,
       formatPercentage,

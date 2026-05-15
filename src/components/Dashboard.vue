@@ -100,6 +100,13 @@
             <StatsCard label="Total Loss" :value="formatCurrency(grossTotals.totalLoss)" valueClass="loss" icon="📉" iconBg="var(--gradient-danger)" />
             <StatsCard label="Total Fees" :value="formatCurrency(totalFees)" valueClass="loss" icon="💸" iconBg="var(--gradient-danger)" />
             <StatsCard label="Total Funding" :value="formatCurrency(totalFunding)" :valueClass="totalFunding >= 0 ? 'profit' : 'loss'" icon="🏦" iconBg="var(--gradient-primary)" />
+            <StatsCard
+              label="Sharpe Ratio"
+              :value="sharpeRatio.toFixed(2)"
+              :valueClass="sharpeRatio >= 1.0 ? 'profit' : sharpeRatio >= 0.5 ? 'neutral' : 'loss'"
+              icon="📈"
+              :iconBg="sharpeRatio >= 1.0 ? 'var(--gradient-success)' : sharpeRatio >= 0.5 ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' : 'var(--gradient-danger)'"
+            />
           </div>
         </div>
       </div>
@@ -178,6 +185,7 @@ import {
   calculateTotalFunding,
   calculateStreaks,
   getTradePnL,
+  calculateSharpeRatio,
 } from '../utils/calculations';
 import { formatCurrency, formatPercentage } from '../utils/formatters';
 
@@ -268,6 +276,7 @@ export default {
     const streaks = computed(() => calculateStreaks(closedTrades.value));
     const totalFees = computed(() => calculateTotalFees(closedTrades.value));
     const totalFunding = computed(() => calculateTotalFunding(closedTrades.value));
+    const sharpeRatio = computed(() => calculateSharpeRatio(closedTrades.value));
 
     const years = computed(() => {
       const activeYears = new Set();
@@ -302,6 +311,7 @@ export default {
       streaks,
       totalFees,
       totalFunding,
+      sharpeRatio,
       formatCurrency,
       formatPercentage,
     };
