@@ -96,9 +96,9 @@
             </th>
             <th>Leverage</th>
             <th>Strategy</th>
-            <th>Status</th>
-            <th>Mode</th>
-            <th>Actions</th>
+            <th class="tight-col">Status</th>
+            <th class="tight-col text-left">Mode</th>
+            <th class="tight-col">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -133,17 +133,17 @@
             <td @click="selectTrade(trade)">{{ trade.days_held != null ? trade.days_held + 'd' : '-' }}</td>
             <td @click="selectTrade(trade)">{{ trade.leverage != null ? trade.leverage + 'x' : '-' }}</td>
             <td @click="selectTrade(trade)">{{ trade.strategy_name || 'N/A' }}</td>
-            <td @click="selectTrade(trade)">
+            <td @click="selectTrade(trade)" class="tight-col">
               <span class="badge" :class="`badge-${getStatusDisplay(trade).cssClass}`">
                 {{ getStatusDisplay(trade).label }}
               </span>
             </td>
-            <td @click="selectTrade(trade)">
+            <td @click="selectTrade(trade)" class="text-left tight-col">
               <span class="badge" :class="`badge-${trade.mode?.toLowerCase()}`">
                 {{ trade.mode }}
               </span>
             </td>
-            <td>
+            <td class="actions-cell tight-col">
               <button @click.stop="editTrade(trade)" class="btn-icon" title="Edit Trade">
                 ✏️
               </button>
@@ -561,6 +561,25 @@ export default {
   background: var(--color-surface-hover);
   border-color: var(--color-primary);
   transform: scale(1.1);
+}
+
+.btn-icon.danger {
+  color: var(--color-loss, #ef4444);
+}
+
+.btn-icon.danger:hover {
+  background: var(--color-loss-bg, rgba(239, 68, 68, 0.1));
+  border-color: var(--color-loss, #ef4444);
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+}
+
+.tight-col {
+  width: 1%;
+  white-space: nowrap;
 }
 
 @media (max-width: 768px) {

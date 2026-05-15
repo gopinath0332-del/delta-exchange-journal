@@ -10,6 +10,7 @@ import {
   Timestamp,
   doc,
   updateDoc,
+  deleteDoc,
 } from 'firebase/firestore';
 
 /**
@@ -237,6 +238,23 @@ export async function updateTrade(collectionName, tradeId, updatedData) {
     return { success: true };
   } catch (error) {
     console.error(`Error updating trade ${tradeId} in ${collectionName}:`, error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Delete a trade from Firestore
+ * @param {string} collectionName 
+ * @param {string} tradeId 
+ * @returns {Promise<{success: boolean, error?: any}>}
+ */
+export async function deleteTrade(collectionName, tradeId) {
+  const tradeRef = doc(db, collectionName, tradeId);
+  try {
+    await deleteDoc(tradeRef);
+    return { success: true };
+  } catch (error) {
+    console.error(`Error deleting trade ${tradeId} from ${collectionName}:`, error);
     return { success: false, error };
   }
 }

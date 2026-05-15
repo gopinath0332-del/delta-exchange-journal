@@ -224,12 +224,17 @@
         </div>
       </div>
 
-      <div class="form-actions mt-2xl">
-        <button type="button" @click="$emit('cancel')" class="btn btn-secondary">Cancel</button>
-        <button type="submit" class="btn btn-primary" :disabled="loading">
-          <span v-if="loading" class="btn-spinner"></span>
-          {{ loading ? 'Saving...' : 'Save Changes' }}
+      <div class="form-actions mt-2xl" style="justify-content: space-between;">
+        <button type="button" @click="handleDelete" class="btn btn-danger-outline" style="border: 1px solid var(--color-loss); color: var(--color-loss); background: transparent; transition: all 0.2s;" onmouseover="this.style.background='var(--color-loss-bg)'" onmouseout="this.style.background='transparent'">
+          Delete Trade
         </button>
+        <div style="display: flex; gap: var(--spacing-md);">
+          <button type="button" @click="$emit('cancel')" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary" :disabled="loading">
+            <span v-if="loading" class="btn-spinner"></span>
+            {{ loading ? 'Saving...' : 'Save Changes' }}
+          </button>
+        </div>
       </div>
     </form>
   </div>
@@ -237,7 +242,7 @@
 
 <script>
 import { ref, onMounted } from 'vue';
-import { updateTrade } from '../firebase/tradeService';
+import { updateTrade, deleteTrade } from '../firebase/tradeService';
 import { TRADE_COLLECTION } from '../firebase/constants';
 
 export default {
@@ -373,6 +378,24 @@ export default {
       tabs,
       events,
       handleSubmit,
+      async handleDelete() {
+        if (confirm(`Are you sure you want to delete the trade for ${props.trade.symbol}? This cannot be undone.`)) {
+          loading.value = true;
+          try {
+            const result = await deleteTrade(TRADE_COLLECTION, props.trade.id);
+            if (result.success) {
+              emit('updated');
+            } else {
+              alert('Failed to delete trade: ' + (result.error?.message || result.error));
+            }
+          } catch (error) {
+            console.error('Error in handleDelete:', error);
+            alert('An unexpected error occurred');
+          } finally {
+            loading.value = false;
+          }
+        }
+      },
       getPnLClass,
       getEventClass,
       formatAction,
