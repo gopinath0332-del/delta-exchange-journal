@@ -17,7 +17,7 @@
     </div>
 
     <div class="calendar-grid-container">
-      <div class="calendar-scroll-wrapper">
+      <div class="calendar-scroll-wrapper no-scrollbar">
         <div class="calendar-weekdays">
           <div v-for="day in weekDays" :key="day" class="weekday-label">{{ day }}</div>
         </div>

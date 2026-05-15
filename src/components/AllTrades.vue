@@ -14,7 +14,7 @@
 
     <!-- Trades List -->
     <div v-else>
-      <div class="tabs-container">
+      <div class="tabs-container no-scrollbar">
         <div class="flex justify-center gap-sm mb-xl tabs-list">
           <button
             @click="activeTab = 'all'"
@@ -146,15 +146,6 @@ export default {
 .tabs-list {
   display: inline-flex;
   min-width: 100%;
-}
-
-.tabs-container::-webkit-scrollbar {
-  height: 4px;
-}
-
-.tabs-container::-webkit-scrollbar-thumb {
-  background: var(--color-primary);
-  border-radius: var(--radius-full);
 }
 
 .loading-container {

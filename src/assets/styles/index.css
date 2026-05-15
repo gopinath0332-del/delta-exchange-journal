@@ -446,6 +446,15 @@ p {
   background: var(--color-primary-light);
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* =====================================================
    Animations
    ===================================================== */
