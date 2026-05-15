@@ -177,6 +177,7 @@ import {
   calculateTotalFees,
   calculateTotalFunding,
   calculateStreaks,
+  getTradePnL,
 } from '../utils/calculations';
 import { formatCurrency, formatPercentage } from '../utils/formatters';
 
@@ -216,7 +217,6 @@ export default {
     const pnlTrades = computed(() =>
       props.trades.filter((t) =>
         (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') &&
-        typeof t.pnl === 'number' &&
         (t.entry_timestamp?.toDate?.() || new Date(t.entry_timestamp)).getFullYear() === selectedYear.value
       )
     );
@@ -234,7 +234,7 @@ export default {
     const winRate = computed(() => calculateWinRate(closedTrades.value));
 
     const winningTrades = computed(() =>
-      closedTrades.value.filter((t) => t.pnl > 0).length
+      closedTrades.value.filter((t) => getTradePnL(t) > 0).length
     );
 
     const avgProfit = computed(() =>

@@ -1,15 +1,36 @@
 // Utility functions for calculating trading statistics and metrics
 
 /**
+ * Get the total realized PnL for a trade.
+ * If the trade has an events array with exit PnL values, sums those.
+ * Otherwise falls back to trade.pnl.
+ * @param {Object} trade
+ * @returns {number}
+ */
+export function getTradePnL(trade) {
+  if (Array.isArray(trade.events) && trade.events.length > 0) {
+    const exitPnls = trade.events
+      .filter(e => {
+        const action = String(e.action || '');
+        return !action.includes('ENTRY') && typeof e.pnl === 'number';
+      })
+      .map(e => e.pnl);
+    if (exitPnls.length > 0) {
+      return exitPnls.reduce((sum, v) => sum + v, 0);
+    }
+  }
+  return typeof trade.pnl === 'number' ? trade.pnl : 0;
+}
+
+/**
  * Calculate total PnL from an array of trades
  * @param {Array} trades - Array of trade objects
  * @returns {number} Total PnL
  */
 export function calculateTotalPnL(trades) {
   return trades.reduce((total, trade) => {
-    // Only count closed trades
-    if ((trade.status === 'CLOSED' || trade.status === 'PARTIAL_CLOSED') && typeof trade.pnl === 'number') {
-      return total + trade.pnl;
+    if (trade.status === 'CLOSED' || trade.status === 'PARTIAL_CLOSED') {
+      return total + getTradePnL(trade);
     }
     return total;
   }, 0);
@@ -24,9 +45,7 @@ export function calculateWinRate(trades) {
   const closedTrades = trades.filter((t) => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED'));
   if (closedTrades.length === 0) return 0;
 
-  const winningTrades = closedTrades.filter(
-    (t) => typeof t.pnl === 'number' && t.pnl > 0
-  );
+  const winningTrades = closedTrades.filter((t) => getTradePnL(t) > 0);
   return (winningTrades.length / closedTrades.length) * 100;
 }
 
@@ -37,11 +56,11 @@ export function calculateWinRate(trades) {
  */
 export function calculateAverageProfit(trades) {
   const winningTrades = trades.filter(
-    (t) => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') && typeof t.pnl === 'number' && t.pnl > 0
+    (t) => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') && getTradePnL(t) > 0
   );
   if (winningTrades.length === 0) return 0;
 
-  const totalProfit = winningTrades.reduce((sum, t) => sum + t.pnl, 0);
+  const totalProfit = winningTrades.reduce((sum, t) => sum + getTradePnL(t), 0);
   return totalProfit / winningTrades.length;
 }
 
@@ -52,11 +71,11 @@ export function calculateAverageProfit(trades) {
  */
 export function calculateAverageLoss(trades) {
   const losingTrades = trades.filter(
-    (t) => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') && typeof t.pnl === 'number' && t.pnl < 0
+    (t) => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') && getTradePnL(t) < 0
   );
   if (losingTrades.length === 0) return 0;
 
-  const totalLoss = losingTrades.reduce((sum, t) => sum + t.pnl, 0);
+  const totalLoss = losingTrades.reduce((sum, t) => sum + getTradePnL(t), 0);
   return totalLoss / losingTrades.length;
 }
 
@@ -67,12 +86,12 @@ export function calculateAverageLoss(trades) {
  */
 export function getBestTrade(trades) {
   const closedTrades = trades.filter(
-    (t) => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') && typeof t.pnl === 'number'
+    (t) => t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED'
   );
   if (closedTrades.length === 0) return null;
 
   return closedTrades.reduce((best, current) =>
-    current.pnl > best.pnl ? current : best
+    getTradePnL(current) > getTradePnL(best) ? current : best
   );
 }
 
@@ -83,12 +102,12 @@ export function getBestTrade(trades) {
  */
 export function getWorstTrade(trades) {
   const closedTrades = trades.filter(
-    (t) => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') && typeof t.pnl === 'number'
+    (t) => t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED'
   );
   if (closedTrades.length === 0) return null;
 
   return closedTrades.reduce((worst, current) =>
-    current.pnl < worst.pnl ? current : worst
+    getTradePnL(current) < getTradePnL(worst) ? current : worst
   );
 }
 
@@ -118,13 +137,12 @@ export function calculateStrategyStats(trades) {
     const stats = strategyStats[strategyName];
     stats.totalTrades += 1;
 
-    if (typeof trade.pnl === 'number') {
-      stats.totalPnL += trade.pnl;
-      if (trade.pnl > 0) {
-        stats.winningTrades += 1;
-      } else if (trade.pnl < 0) {
-        stats.losingTrades += 1;
-      }
+    const pnl = getTradePnL(trade);
+    stats.totalPnL += pnl;
+    if (pnl > 0) {
+      stats.winningTrades += 1;
+    } else if (pnl < 0) {
+      stats.losingTrades += 1;
     }
   });
 
@@ -148,7 +166,7 @@ export function calculateStrategyStats(trades) {
  */
 export function calculateCumulativePnL(trades) {
   const closedTrades = trades
-    .filter((t) => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') && typeof t.pnl === 'number')
+    .filter((t) => t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED')
     .sort((a, b) => {
       const rawA = a.exit_timestamp?.toDate?.() || (a.exit_timestamp ? new Date(a.exit_timestamp) : null);
       const rawB = b.exit_timestamp?.toDate?.() || (b.exit_timestamp ? new Date(b.exit_timestamp) : null);
@@ -159,7 +177,7 @@ export function calculateCumulativePnL(trades) {
 
   let cumulative = 0;
   return closedTrades.map((trade) => {
-    cumulative += trade.pnl;
+    cumulative += getTradePnL(trade);
     const rawExit = trade.exit_timestamp?.toDate?.() || (trade.exit_timestamp ? new Date(trade.exit_timestamp) : null);
     const rawEntry = trade.entry_timestamp?.toDate?.() || (trade.entry_timestamp ? new Date(trade.entry_timestamp) : null);
     const date = (rawExit && !isNaN(rawExit)) ? rawExit : rawEntry || new Date();
@@ -180,7 +198,7 @@ export function calculatePnLBySymbol(trades) {
   const symbolMap = {};
 
   trades.forEach((trade) => {
-    if ((trade.status === 'CLOSED' || trade.status === 'PARTIAL_CLOSED') && typeof trade.pnl === 'number') {
+    if (trade.status === 'CLOSED' || trade.status === 'PARTIAL_CLOSED') {
       const symbol = trade.symbol || 'Unknown';
       if (!symbolMap[symbol]) {
         symbolMap[symbol] = { 
@@ -194,7 +212,7 @@ export function calculatePnLBySymbol(trades) {
         };
       }
       
-      const pnl = trade.pnl;
+      const pnl = getTradePnL(trade);
       symbolMap[symbol].pnl += pnl;
       symbolMap[symbol].count += 1;
       
@@ -247,26 +265,27 @@ export function calculateMonthlyBreakdown(trades) {
     losingTrades: [],
   }));
 
-  const closedTrades = trades.filter(t => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') && typeof t.pnl === 'number');
+  const closedTrades = trades.filter(t => t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED');
 
   closedTrades.forEach(trade => {
     const rawExit = trade.exit_timestamp?.toDate?.() || (trade.exit_timestamp ? new Date(trade.exit_timestamp) : null);
     const rawEntry = trade.entry_timestamp?.toDate?.() || (trade.entry_timestamp ? new Date(trade.entry_timestamp) : null);
     const exitDate = (rawExit && !isNaN(rawExit)) ? rawExit : rawEntry;
-    if (!exitDate || isNaN(exitDate)) return; // truly no date at all — skip
+    if (!exitDate || isNaN(exitDate)) return;
     const monthIndex = exitDate.getMonth();
 
     if (monthIndex >= 0 && monthIndex < 12) {
       const stats = monthlyStats[monthIndex];
+      const pnl = getTradePnL(trade);
       stats.tradeCount += 1;
-      stats.pnl += trade.pnl;
+      stats.pnl += pnl;
       stats.funding += (trade.funding_charges || 0);
       stats.fees += (trade.trading_fees || 0);
 
-      if (trade.pnl > 0) {
+      if (pnl > 0) {
         stats.wins += 1;
         stats.winningTrades.push(trade);
-      } else if (trade.pnl < 0) {
+      } else if (pnl < 0) {
         stats.losses += 1;
         stats.losingTrades.push(trade);
       }
@@ -281,8 +300,8 @@ export function calculateMonthlyBreakdown(trades) {
     // Calculate R:R for the month
     let rrRatio = 0;
     if (stats.winningTrades.length > 0 && stats.losingTrades.length > 0) {
-      const avgWin = stats.winningTrades.reduce((sum, t) => sum + t.pnl, 0) / stats.winningTrades.length;
-      const avgLoss = stats.losingTrades.reduce((sum, t) => sum + t.pnl, 0) / stats.losingTrades.length;
+      const avgWin = stats.winningTrades.reduce((sum, t) => sum + getTradePnL(t), 0) / stats.winningTrades.length;
+      const avgLoss = stats.losingTrades.reduce((sum, t) => sum + getTradePnL(t), 0) / stats.losingTrades.length;
       rrRatio = Math.abs(avgWin / avgLoss);
     } else if (stats.winningTrades.length > 0 && stats.losingTrades.length === 0) {
       rrRatio = 100; // High R:R if no losses
@@ -337,7 +356,7 @@ export function calculateTotalFunding(trades) {
  */
 export function calculateStreaks(trades) {
   const closedTrades = trades
-    .filter((t) => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') && typeof t.pnl === 'number')
+    .filter((t) => t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED')
     .sort((a, b) => {
       const rawA = a.exit_timestamp?.toDate?.() || (a.exit_timestamp ? new Date(a.exit_timestamp) : null);
       const rawB = b.exit_timestamp?.toDate?.() || (b.exit_timestamp ? new Date(b.exit_timestamp) : null);
@@ -363,7 +382,7 @@ export function calculateStreaks(trades) {
   let tempLossStreak = 0;
 
   closedTrades.forEach((trade) => {
-    const isWin = trade.pnl > 0;
+    const isWin = getTradePnL(trade) > 0;
 
     if (isWin) {
       tempWinStreak++;
@@ -445,7 +464,7 @@ export function calculateDailyPerformance(trades, daysToShow = 365) {
       };
     }
 
-    dailyData[dateKey].pnl += trade.pnl || 0;
+    dailyData[dateKey].pnl += getTradePnL(trade);
     dailyData[dateKey].tradeCount += 1;
     dailyData[dateKey].trades.push(trade);
   });
@@ -523,18 +542,19 @@ export function calculateTimeBasedPerformance(trades) {
     const rawEntry = trade.entry_timestamp?.toDate?.() || (trade.entry_timestamp ? new Date(trade.entry_timestamp) : null);
     const exitDate = (rawExit && !isNaN(rawExit)) ? rawExit : rawEntry;
     if (!exitDate || isNaN(exitDate)) return;
-    const dayIndex = exitDate.getDay(); // 0 = Sunday
-    const hourIndex = exitDate.getHours(); // 0-23
+    const dayIndex = exitDate.getDay();
+    const hourIndex = exitDate.getHours();
+    const pnl = getTradePnL(trade);
 
     // Update Day Bucket
-    dayBuckets[dayIndex].pnl += trade.pnl || 0;
+    dayBuckets[dayIndex].pnl += pnl;
     dayBuckets[dayIndex].total += 1;
-    if ((trade.pnl || 0) > 0) dayBuckets[dayIndex].wins += 1;
+    if (pnl > 0) dayBuckets[dayIndex].wins += 1;
 
     // Update Hour Bucket
-    hourBuckets[hourIndex].pnl += trade.pnl || 0;
+    hourBuckets[hourIndex].pnl += pnl;
     hourBuckets[hourIndex].total += 1;
-    if ((trade.pnl || 0) > 0) hourBuckets[hourIndex].wins += 1;
+    if (pnl > 0) hourBuckets[hourIndex].wins += 1;
   });
 
   // Calculate Win Rates and format final data
@@ -579,7 +599,7 @@ export function calculateMaxDrawdown(trades) {
   let maxDrawdown = 0;
 
   sortedTrades.forEach(trade => {
-    currentPnL += (trade.pnl || 0);
+    currentPnL += getTradePnL(trade);
 
     if (currentPnL > peak) {
       peak = currentPnL;
@@ -617,12 +637,12 @@ export function calculateProfitFactor(trades) {
   const closedTrades = trades.filter(t => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED'));
 
   const grossProfit = closedTrades
-    .filter(t => (t.pnl || 0) > 0)
-    .reduce((sum, t) => sum + t.pnl, 0);
+    .filter(t => getTradePnL(t) > 0)
+    .reduce((sum, t) => sum + getTradePnL(t), 0);
 
   const grossLoss = closedTrades
-    .filter(t => (t.pnl || 0) < 0)
-    .reduce((sum, t) => sum + Math.abs(t.pnl), 0);
+    .filter(t => getTradePnL(t) < 0)
+    .reduce((sum, t) => sum + Math.abs(getTradePnL(t)), 0);
 
   if (grossLoss === 0) return grossProfit > 0 ? 100 : 0;
 
@@ -637,13 +657,13 @@ export function calculateProfitFactor(trades) {
 export function calculateDailyPnLMap(trades) {
   const dailyMap = {};
   trades.forEach(trade => {
-    if ((trade.status === 'CLOSED' || trade.status === 'PARTIAL_CLOSED') && typeof trade.pnl === 'number') {
+    if (trade.status === 'CLOSED' || trade.status === 'PARTIAL_CLOSED') {
       const rawExit = trade.exit_timestamp?.toDate?.() || (trade.exit_timestamp ? new Date(trade.exit_timestamp) : null);
       const rawEntry = trade.entry_timestamp?.toDate?.() || (trade.entry_timestamp ? new Date(trade.entry_timestamp) : null);
       const exitDate = (rawExit && !isNaN(rawExit)) ? rawExit : rawEntry;
       if (!exitDate || isNaN(exitDate)) return;
       const dateKey = exitDate.toISOString().split('T')[0];
-      dailyMap[dateKey] = (dailyMap[dateKey] || 0) + trade.pnl;
+      dailyMap[dateKey] = (dailyMap[dateKey] || 0) + getTradePnL(trade);
     }
   });
   return dailyMap;
@@ -690,13 +710,13 @@ export function calculateDailyStats(dailyPnLMap) {
  * @returns {Object} { totalProfit, totalLoss }
  */
 export function calculateGrossTotals(trades) {
-  const closedTrades = trades.filter(t => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') && typeof t.pnl === 'number');
+  const closedTrades = trades.filter(t => t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED');
   const totalProfit = closedTrades
-    .filter(t => t.pnl > 0)
-    .reduce((sum, t) => sum + t.pnl, 0);
+    .filter(t => getTradePnL(t) > 0)
+    .reduce((sum, t) => sum + getTradePnL(t), 0);
   const totalLoss = closedTrades
-    .filter(t => t.pnl < 0)
-    .reduce((sum, t) => sum + t.pnl, 0);
+    .filter(t => getTradePnL(t) < 0)
+    .reduce((sum, t) => sum + getTradePnL(t), 0);
 
   return { totalProfit, totalLoss };
 }
@@ -785,7 +805,7 @@ export function calculateDisciplineScore(trade) {
  */
 export function calculateStreakHistory(trades) {
   const closedTrades = trades
-    .filter((t) => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') && typeof t.pnl === 'number')
+    .filter((t) => t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED')
     .sort((a, b) => {
       const rawA = a.exit_timestamp?.toDate?.() || (a.exit_timestamp ? new Date(a.exit_timestamp) : null);
       const rawB = b.exit_timestamp?.toDate?.() || (b.exit_timestamp ? new Date(b.exit_timestamp) : null);
@@ -801,7 +821,7 @@ export function calculateStreakHistory(trades) {
   let currentType = null; // 'win' or 'loss'
 
   closedTrades.forEach(trade => {
-    const isWin = trade.pnl > 0;
+    const isWin = getTradePnL(trade) > 0;
     const type = isWin ? 'win' : 'loss';
 
     if (type === currentType) {
@@ -830,7 +850,7 @@ export function calculateStreakHistory(trades) {
  */
 export function calculateStreakDistribution(trades) {
   const closedTrades = trades
-    .filter((t) => (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') && typeof t.pnl === 'number')
+    .filter((t) => t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED')
     .sort((a, b) => {
       const rawA = a.exit_timestamp?.toDate?.() || (a.exit_timestamp ? new Date(a.exit_timestamp) : null);
       const rawB = b.exit_timestamp?.toDate?.() || (b.exit_timestamp ? new Date(b.exit_timestamp) : null);
@@ -846,7 +866,7 @@ export function calculateStreakDistribution(trades) {
   let currentType = null;
 
   closedTrades.forEach(trade => {
-    const type = trade.pnl > 0 ? 'win' : 'loss';
+    const type = getTradePnL(trade) > 0 ? 'win' : 'loss';
     if (type === currentType) {
       currentStreak++;
     } else {

@@ -58,6 +58,7 @@
 import { ref, computed } from 'vue';
 import { DateTime } from 'luxon';
 import { formatCurrency } from '../utils/formatters';
+import { getTradePnL } from '../utils/calculations';
 import TradeList from './TradeList.vue';
 
 export default {
@@ -117,8 +118,8 @@ export default {
         });
 
         const dayPnL = dayTrades.reduce((sum, t) => {
-           if ((t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') && typeof t.pnl === 'number') {
-             return sum + t.pnl;
+           if (t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED') {
+             return sum + getTradePnL(t);
            }
            return sum;
         }, 0);

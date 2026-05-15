@@ -18,7 +18,7 @@
         <div v-if="tooltip.day.trades && tooltip.day.trades.length > 0" class="tooltip-trades">
           <div v-for="trade in tooltip.day.trades.slice(0, 5)" :key="trade.id" class="tooltip-trade-row">
              <span class="trade-symbol">{{ trade.symbol }}</span>
-             <span :class="getPnLClass(trade.pnl)">{{ formatCurrency(trade.pnl) }}</span>
+             <span :class="getPnLClass(getTradePnLValue(trade))">{{ formatCurrency(getTradePnLValue(trade)) }}</span>
           </div>
           <div v-if="tooltip.day.trades.length > 5" class="tooltip-more">
              +{{ tooltip.day.trades.length - 5 }} more
@@ -83,7 +83,7 @@
 
 <script>
 import { computed, ref } from 'vue';
-import { calculateDailyPerformance } from '../utils/calculations';
+import { calculateDailyPerformance, getTradePnL } from '../utils/calculations';
 import { formatCurrency, formatShortDate } from '../utils/formatters';
 
 export default {
@@ -150,6 +150,8 @@ export default {
       return pnl > 0 ? 'profit' : 'loss';
     };
 
+    const getTradePnLValue = (trade) => getTradePnL(trade);
+
     const showTooltip = (event, day) => {
       if (day.tradeCount === 0) return;
       
@@ -189,6 +191,7 @@ export default {
       heatmapRef,
       tooltip,
       getPnLClass,
+      getTradePnLValue,
       showTooltip,
       hideTooltip,
       formatShortDate,

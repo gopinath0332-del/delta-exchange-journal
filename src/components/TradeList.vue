@@ -105,7 +105,7 @@
           <tr
             v-for="trade in displayedTrades"
             :key="trade.id"
-            :class="['trade-row', trade.status === 'CLOSED' ? getPnLClass(trade.pnl) : 'neutral']"
+            :class="['trade-row', trade.status === 'CLOSED' ? getPnLClass(getDisplayPnL(trade)) : 'neutral']"
           >
             <td @click="selectTrade(trade)" class="font-semibold">{{ trade.symbol }}</td>
             <td @click="selectTrade(trade)">{{ formatShortDate(trade.entry_timestamp) }}</td>
@@ -124,8 +124,8 @@
               </span>
               <span v-else class="text-muted">-</span>
             </td>
-            <td @click="selectTrade(trade)" :class="getPnLClass(trade.pnl)">
-              {{ trade.status !== 'OPEN' ? formatCurrency(trade.pnl) : 'OPEN' }}
+            <td @click="selectTrade(trade)" :class="getPnLClass(getDisplayPnL(trade))">
+              {{ trade.status !== 'OPEN' ? formatCurrency(getDisplayPnL(trade)) : 'OPEN' }}
             </td>
             <td @click="selectTrade(trade)" :class="getPnLClass(trade.r_multiple)">
               {{ trade.r_multiple != null ? trade.r_multiple.toFixed(2) + 'R' : '-' }}
@@ -184,6 +184,7 @@ import { ref, computed } from 'vue';
 import TradeCard from './TradeCard.vue';
 import TradeEditForm from './TradeEditForm.vue';
 import { formatCurrency, formatShortDate } from '../utils/formatters';
+import { getTradePnL } from '../utils/calculations';
 
 export default {
   name: 'TradeList',
@@ -337,6 +338,9 @@ export default {
       return pnl > 0 ? 'profit' : 'loss';
     };
 
+    // Returns the correct total PnL for display (sums all exit events)
+    const getDisplayPnL = (trade) => getTradePnL(trade);
+
     const selectTrade = (trade) => {
       selectedTrade.value = trade;
     };
@@ -372,6 +376,7 @@ export default {
       sortBy,
       clearFilters,
       getPnLClass,
+      getDisplayPnL,
       selectTrade,
       getStatusDisplay,
       formatCurrency,

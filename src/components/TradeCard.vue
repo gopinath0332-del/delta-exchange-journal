@@ -179,7 +179,7 @@
 <script>
 import { computed } from 'vue';
 import { formatCurrency, formatDate, formatPercentage, formatDaysHeld, formatMode } from '../utils/formatters';
-import { calculateDisciplineScore } from '../utils/calculations';
+import { calculateDisciplineScore, getTradePnL } from '../utils/calculations';
 
 export default {
   name: 'TradeCard',
@@ -195,7 +195,7 @@ export default {
   },
   setup(props) {
     const pnlClass = computed(() => {
-      const pnl = props.trade.pnl || 0;
+      const pnl = getTradePnL(props.trade);
       return pnl > 0 ? 'profit' : pnl < 0 ? 'loss' : 'neutral';
     });
 
@@ -203,7 +203,7 @@ export default {
 
     const formattedPnL = computed(() => {
       if (props.trade.status === 'OPEN') return 'OPEN';
-      return formatCurrency(props.trade.pnl || 0);
+      return formatCurrency(getTradePnL(props.trade));
     });
 
     const daysHeld = computed(() => {
