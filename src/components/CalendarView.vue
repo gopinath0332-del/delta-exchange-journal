@@ -17,27 +17,29 @@
     </div>
 
     <div class="calendar-grid-container">
-      <div class="calendar-weekdays">
-        <div v-for="day in weekDays" :key="day" class="weekday-label">{{ day }}</div>
-      </div>
-      <div class="calendar-grid">
-        <div
-          v-for="(day, index) in calendarDays"
-          :key="index"
-          class="calendar-day"
-          :class="{
-            'other-month': !day.isCurrentMonth,
-            'is-today': day.isToday,
-            'has-trades': day.tradeCount > 0
-          }"
-          @click="selectDay(day)"
-        >
-          <div class="day-number">{{ day.date.day }}</div>
-          <div v-if="day.tradeCount > 0" class="day-content">
-            <div class="day-pnl" :class="day.pnl >= 0 ? 'profit' : 'loss'">
-              {{ formatCurrency(day.pnl) }}
+      <div class="calendar-scroll-wrapper">
+        <div class="calendar-weekdays">
+          <div v-for="day in weekDays" :key="day" class="weekday-label">{{ day }}</div>
+        </div>
+        <div class="calendar-grid">
+          <div
+            v-for="(day, index) in calendarDays"
+            :key="index"
+            class="calendar-day"
+            :class="{
+              'other-month': !day.isCurrentMonth,
+              'is-today': day.isToday,
+              'has-trades': day.tradeCount > 0
+            }"
+            @click="selectDay(day)"
+          >
+            <div class="day-number">{{ day.date.day }}</div>
+            <div v-if="day.tradeCount > 0" class="day-content">
+              <div class="day-pnl" :class="day.pnl >= 0 ? 'profit' : 'loss'">
+                {{ formatCurrency(day.pnl) }}
+              </div>
+              <div class="day-trade-count">{{ day.tradeCount }} trades</div>
             </div>
-            <div class="day-trade-count">{{ day.tradeCount }} trades</div>
           </div>
         </div>
       </div>
@@ -195,8 +197,13 @@ export default {
 
 .calendar-nav h2 {
   margin: 0;
-  min-width: 200px;
   text-align: center;
+}
+
+@media (max-width: 640px) {
+  .calendar-nav h2 {
+    min-width: auto;
+  }
 }
 
 .stat-label {
@@ -214,10 +221,16 @@ export default {
   width: 100%;
 }
 
+.calendar-scroll-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .calendar-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   margin-bottom: var(--spacing-sm);
+  min-width: 600px;
 }
 
 .weekday-label {
@@ -237,6 +250,7 @@ export default {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   overflow: hidden;
+  min-width: 600px;
 }
 
 .calendar-day {

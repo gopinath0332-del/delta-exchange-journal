@@ -8,17 +8,20 @@
             <div class="logo">
               <h1>📈 Trading Journal</h1>
             </div>
-            <nav class="nav">
-              <a href="#" @click.prevent="currentView = 'dashboard'" :class="{ active: currentView === 'dashboard' }">
+            <button class="menu-toggle" @click="isMenuOpen = !isMenuOpen" aria-label="Toggle Menu">
+              <span class="hamburger" :class="{ 'open': isMenuOpen }"></span>
+            </button>
+            <nav class="nav" :class="{ 'nav-open': isMenuOpen }">
+              <a href="#" @click.prevent="currentView = 'dashboard'; isMenuOpen = false" :class="{ active: currentView === 'dashboard' }">
                 Dashboard
               </a>
-              <a href="#" @click.prevent="currentView = 'analytics'" :class="{ active: currentView === 'analytics' }">
+              <a href="#" @click.prevent="currentView = 'analytics'; isMenuOpen = false" :class="{ active: currentView === 'analytics' }">
                 Analytics
               </a>
-              <a href="#" @click.prevent="currentView = 'trades'" :class="{ active: currentView === 'trades' }">
+              <a href="#" @click.prevent="currentView = 'trades'; isMenuOpen = false" :class="{ active: currentView === 'trades' }">
                 All Trades
               </a>
-              <a href="#" @click.prevent="currentView = 'calendar'" :class="{ active: currentView === 'calendar' }">
+              <a href="#" @click.prevent="currentView = 'calendar'; isMenuOpen = false" :class="{ active: currentView === 'calendar' }">
                 Calendar View
               </a>
               <button @click="toggleTheme" class="btn btn-secondary theme-toggle" title="Toggle Light/Dark Mode">
@@ -26,6 +29,8 @@
                 <span v-else>🌙</span>
               </button>
             </nav>
+            <div class="menu-overlay" v-if="isMenuOpen" @click="isMenuOpen = false"></div>
+
           </div>
         </div>
       </header>
@@ -71,6 +76,7 @@ export default {
     const currentView = ref('dashboard');
     const trades = ref([]);
     const isLightMode = ref(true);
+    const isMenuOpen = ref(false);
     let unsubscribe = null;
 
     const toggleTheme = () => {
@@ -108,6 +114,7 @@ export default {
       currentView,
       trades,
       isLightMode,
+      isMenuOpen,
       toggleTheme,
     };
   },
@@ -143,6 +150,51 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  z-index: 110;
+}
+
+.hamburger {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--color-text-primary);
+  position: relative;
+  transition: all var(--transition-base);
+}
+
+.hamburger::before,
+.hamburger::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 2px;
+  background: var(--color-text-primary);
+  transition: all var(--transition-base);
+}
+
+.hamburger::before { top: -8px; }
+.hamburger::after { bottom: -8px; }
+
+.hamburger.open {
+  background: transparent;
+}
+
+.hamburger.open::before {
+  transform: rotate(45deg);
+  top: 0;
+}
+
+.hamburger.open::after {
+  transform: rotate(-45deg);
+  bottom: 0;
 }
 
 .logo h1 {
@@ -211,15 +263,52 @@ export default {
 }
 
 @media (max-width: 640px) {
+  .menu-toggle {
+    display: block;
+  }
+
   .header-content {
-    flex-direction: column;
+    flex-direction: row;
     gap: var(--spacing-md);
-    align-items: flex-start;
+    align-items: center;
   }
 
   .nav {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 280px;
+    height: 100vh;
+    background: var(--color-bg-secondary);
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: var(--spacing-2xl) var(--spacing-xl);
+    gap: var(--spacing-lg);
+    transition: right var(--transition-base);
+    z-index: 105;
+    border-left: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .nav-open {
+    right: 0;
+  }
+
+  .nav a {
     width: 100%;
-    justify-content: space-around;
+    text-align: left;
+    padding: var(--spacing-md);
+  }
+
+  .menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 101;
   }
 }
 </style>

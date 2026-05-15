@@ -14,31 +14,33 @@
 
     <!-- Trades List -->
     <div v-else>
-      <div class="flex justify-center gap-sm mb-xl">
-        <button
-          @click="activeTab = 'all'"
-          :class="['btn btn-secondary', activeTab === 'all' ? 'active-tab' : '']"
-        >
-          All Trades ({{ trades.length }})
-        </button>
-        <button
-          @click="activeTab = 'open'"
-          :class="['btn btn-secondary', activeTab === 'open' ? 'active-tab' : '']"
-        >
-          Open Trades ({{ openTrades.length }})
-        </button>
-        <button
-          @click="activeTab = 'partial'"
-          :class="['btn btn-secondary', activeTab === 'partial' ? 'active-tab' : '']"
-        >
-          Partial Trades ({{ partialTrades.length }})
-        </button>
-        <button
-          @click="activeTab = 'closed'"
-          :class="['btn btn-secondary', activeTab === 'closed' ? 'active-tab' : '']"
-        >
-          Closed Trades ({{ closedTrades.length }})
-        </button>
+      <div class="tabs-container">
+        <div class="flex justify-center gap-sm mb-xl tabs-list">
+          <button
+            @click="activeTab = 'all'"
+            :class="['btn btn-secondary', activeTab === 'all' ? 'active-tab' : '']"
+          >
+            All Trades ({{ trades.length }})
+          </button>
+          <button
+            @click="activeTab = 'open'"
+            :class="['btn btn-secondary', activeTab === 'open' ? 'active-tab' : '']"
+          >
+            Open Trades ({{ openTrades.length }})
+          </button>
+          <button
+            @click="activeTab = 'partial'"
+            :class="['btn btn-secondary', activeTab === 'partial' ? 'active-tab' : '']"
+          >
+            Partial Trades ({{ partialTrades.length }})
+          </button>
+          <button
+            @click="activeTab = 'closed'"
+            :class="['btn btn-secondary', activeTab === 'closed' ? 'active-tab' : '']"
+          >
+            Closed Trades ({{ closedTrades.length }})
+          </button>
+        </div>
       </div>
 
       <TradeList :trades="filteredTrades" />
@@ -133,6 +135,26 @@ export default {
   background: var(--color-primary) !important;
   color: white !important;
   border-color: var(--color-primary) !important;
+}
+
+.tabs-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tabs-list {
+  display: inline-flex;
+  min-width: 100%;
+}
+
+.tabs-container::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tabs-container::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
 }
 
 .loading-container {

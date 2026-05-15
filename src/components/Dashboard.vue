@@ -59,25 +59,27 @@
 
         <!-- Detailed Metrics Tabs -->
         <div class="glass-card p-xl">
-          <div class="flex justify-center gap-sm mb-xl">
-            <button
-              @click="activeTab = 'daily'"
-              :class="['btn btn-secondary', activeTab === 'daily' ? 'active-tab' : '']"
-            >
-              Daily Performance
-            </button>
-            <button
-              @click="activeTab = 'consistency'"
-              :class="['btn btn-secondary', activeTab === 'consistency' ? 'active-tab' : '']"
-            >
-              Consistency
-            </button>
-            <button
-              @click="activeTab = 'financials'"
-              :class="['btn btn-secondary', activeTab === 'financials' ? 'active-tab' : '']"
-            >
-              Financials
-            </button>
+          <div class="tabs-container">
+            <div class="flex justify-center gap-sm mb-xl tabs-list">
+              <button
+                @click="activeTab = 'daily'"
+                :class="['btn btn-secondary', activeTab === 'daily' ? 'active-tab' : '']"
+              >
+                Daily Performance
+              </button>
+              <button
+                @click="activeTab = 'consistency'"
+                :class="['btn btn-secondary', activeTab === 'consistency' ? 'active-tab' : '']"
+              >
+                Consistency
+              </button>
+              <button
+                @click="activeTab = 'financials'"
+                :class="['btn btn-secondary', activeTab === 'financials' ? 'active-tab' : '']"
+              >
+                Financials
+              </button>
+            </div>
           </div>
 
           <div v-if="activeTab === 'daily'" class="grid grid-cols-4 gap-md">
@@ -399,5 +401,25 @@ export default {
   background: var(--color-primary) !important;
   color: white !important;
   border-color: var(--color-primary) !important;
+}
+
+.tabs-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tabs-list {
+  display: inline-flex;
+  min-width: 100%;
+}
+
+.tabs-container::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tabs-container::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
 }
 </style>
