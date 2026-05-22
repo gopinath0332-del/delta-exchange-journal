@@ -177,6 +177,11 @@
 
       <!-- ACTIVITY TAB -->
       <div v-if="activeSubTab === 'activity'" class="fade-in">
+        <div class="glass-card p-xl mb-xl">
+          <h3 class="mb-md">Monthly Returns Heatmap</h3>
+          <MonthlyReturnsHeatmap :trades="trades" />
+        </div>
+
         <!-- Calendar Heatmap -->
         <div class="glass-card p-xl mb-xl">
           <h3 class="mb-md">Trading Activity Calendar</h3>
@@ -214,6 +219,7 @@ import StrategyPerformance from './StrategyPerformance.vue';
 import PnLBreakdown from './PnLBreakdown.vue';
 import SymbolPerformanceTable from './SymbolPerformanceTable.vue';
 import CalendarHeatmap from './CalendarHeatmap.vue';
+import MonthlyReturnsHeatmap from './MonthlyReturnsHeatmap.vue';
 import TimeAnalysis from './TimeAnalysis.vue';
 import {
   getBestTrade,
@@ -243,6 +249,7 @@ export default {
     PnLBreakdown,
     SymbolPerformanceTable,
     CalendarHeatmap,
+    MonthlyReturnsHeatmap,
     TimeAnalysis,
   },
   props: {
