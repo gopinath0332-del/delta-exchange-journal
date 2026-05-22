@@ -66,7 +66,12 @@
     </div>
 
     <!-- Table -->
-    <div class="table-container">
+    <div
+      ref="containerRef"
+      class="table-container"
+      :class="{ 'virtual-scroll': !limit }"
+      @scroll="handleScroll"
+    >
       <table class="table">
         <thead>
           <tr>
@@ -102,8 +107,13 @@
           </tr>
         </thead>
         <tbody>
+          <!-- Bottom/Top Spacers for Virtual Scrolling -->
+          <tr v-if="paddingTop > 0" :style="{ height: paddingTop + 'px' }">
+            <td colspan="12" style="padding: 0; border: none; height: inherit;"></td>
+          </tr>
+
           <tr
-            v-for="trade in displayedTrades"
+            v-for="trade in visibleTrades"
             :key="trade.id"
             :class="['trade-row', trade.status === 'CLOSED' ? getPnLClass(getDisplayPnL(trade)) : 'neutral']"
           >
@@ -149,6 +159,11 @@
               </button>
             </td>
           </tr>
+
+          <!-- Bottom Spacer for Virtual Scrolling -->
+          <tr v-if="paddingBottom > 0" :style="{ height: paddingBottom + 'px' }">
+            <td colspan="12" style="padding: 0; border: none; height: inherit;"></td>
+          </tr>
         </tbody>
       </table>
 
@@ -180,7 +195,7 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import TradeCard from './TradeCard.vue';
 import TradeEditForm from './TradeEditForm.vue';
 import { formatCurrency, formatShortDate } from '../utils/formatters';
@@ -358,6 +373,67 @@ export default {
       return { label: trade.status, cssClass: trade.status.toLowerCase() };
     };
 
+    // Virtual Scrolling state and setup
+    const containerRef = ref(null);
+    const scrollTop = ref(0);
+    const containerHeight = ref(600);
+    const rowHeight = 53; // Estimated height for a single table row (padding + text + borders)
+    let resizeObserver = null;
+
+    const handleScroll = (event) => {
+      if (props.limit) return;
+      scrollTop.value = event.target.scrollTop;
+    };
+
+    onMounted(() => {
+      if (containerRef.value) {
+        containerHeight.value = containerRef.value.clientHeight || 600;
+        if (window.ResizeObserver) {
+          resizeObserver = new ResizeObserver((entries) => {
+            for (let entry of entries) {
+              containerHeight.value = entry.contentRect.height || entry.target.clientHeight || 600;
+            }
+          });
+          resizeObserver.observe(containerRef.value);
+        }
+      }
+    });
+
+    onUnmounted(() => {
+      if (resizeObserver && containerRef.value) {
+        resizeObserver.unobserve(containerRef.value);
+      }
+    });
+
+    const totalItems = computed(() => displayedTrades.value.length);
+
+    const startIndex = computed(() => {
+      if (props.limit) return 0;
+      // Subtract buffer of 10 rows for smooth scrolling
+      return Math.max(0, Math.floor(scrollTop.value / rowHeight) - 10);
+    });
+
+    const endIndex = computed(() => {
+      if (props.limit) return totalItems.value;
+      // Add buffer of 10 rows
+      return Math.min(totalItems.value, Math.ceil((scrollTop.value + containerHeight.value) / rowHeight) + 10);
+    });
+
+    const visibleTrades = computed(() => {
+      if (props.limit) return displayedTrades.value;
+      return displayedTrades.value.slice(startIndex.value, endIndex.value);
+    });
+
+    const paddingTop = computed(() => {
+      if (props.limit) return 0;
+      return startIndex.value * rowHeight;
+    });
+
+    const paddingBottom = computed(() => {
+      if (props.limit) return 0;
+      return (totalItems.value - endIndex.value) * rowHeight;
+    });
+
     return {
       searchQuery,
       statusFilter,
@@ -388,6 +464,12 @@ export default {
       onTradeUpdated() {
         editingTrade.value = null;
       },
+      // Virtual scroll exports
+      containerRef,
+      handleScroll,
+      visibleTrades,
+      paddingTop,
+      paddingBottom,
     };
   },
 };
@@ -439,6 +521,22 @@ export default {
   overflow-x: auto;
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
+}
+
+.table-container.virtual-scroll {
+  max-height: 600px;
+  overflow-y: auto;
+  position: relative;
+}
+
+.table-container.virtual-scroll th {
+  position: sticky;
+  top: 0;
+  background: var(--color-bg-tertiary);
+  z-index: 2;
+  box-shadow: inset 0 -2px 0 var(--glass-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .sortable {
