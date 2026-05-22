@@ -130,7 +130,7 @@ export default {
                 below: 'rgba(239, 68, 68, 0.2)'  // red fill below zero
               },
               borderWidth: 3,
-              tension: 0.4,
+              tension: 0,
               pointRadius: 4,
               pointHoverRadius: 6,
               segment: {
