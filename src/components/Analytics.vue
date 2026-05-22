@@ -45,7 +45,7 @@
           />
           <StatsCard
             label="Profit Factor"
-            :value="profitFactor.toFixed(2)"
+            :value="formatRatio(profitFactor)"
             :valueClass="profitFactor >= 1.5 ? 'profit' : profitFactor >= 1 ? 'neutral' : 'loss'"
             icon="💰"
             :iconBg="profitFactor >= 1.5 ? 'var(--gradient-success)' : profitFactor >= 1 ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' : 'var(--gradient-danger)'"
@@ -53,7 +53,7 @@
           />
           <StatsCard
             label="Risk/Reward"
-            :value="riskRewardRatio.toFixed(2)"
+            :value="formatRatio(riskRewardRatio)"
             :valueClass="riskRewardRatio >= 1.5 ? 'profit' : riskRewardRatio >= 1 ? 'neutral' : 'loss'"
             icon="⚖️"
             :iconBg="riskRewardRatio >= 1.5 ? 'var(--gradient-success)' : riskRewardRatio >= 1 ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' : 'var(--gradient-danger)'"
@@ -240,7 +240,7 @@ import {
   calculateSharpeRatio,
 } from '../utils/calculations';
 
-import { formatCurrency, formatPercentage } from '../utils/formatters';
+import { formatCurrency, formatPercentage, formatRatio } from '../utils/formatters';
 
 export default {
   name: 'Analytics',
@@ -342,6 +342,7 @@ export default {
       avgDisciplineScore,
       formatCurrency,
       formatPercentage,
+      formatRatio,
     };
   },
 };

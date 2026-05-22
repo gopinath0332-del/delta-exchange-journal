@@ -234,7 +234,7 @@ export function calculatePnLBySymbol(trades) {
     tradeCount: data.count,
     winRate: (data.wins / data.count) * 100,
     avgPnL: data.pnl / data.count,
-    profitFactor: data.grossLoss === 0 ? (data.grossProfit > 0 ? 99 : 0) : data.grossProfit / data.grossLoss,
+    profitFactor: data.grossLoss === 0 ? (data.grossProfit > 0 ? Infinity : null) : data.grossProfit / data.grossLoss,
     bestTrade: data.bestTrade,
     worstTrade: data.worstTrade
   }));
@@ -298,13 +298,13 @@ export function calculateMonthlyBreakdown(trades) {
     const avgPnL = stats.tradeCount > 0 ? stats.pnl / stats.tradeCount : 0;
 
     // Calculate R:R for the month
-    let rrRatio = 0;
+    let rrRatio = null;
     if (stats.winningTrades.length > 0 && stats.losingTrades.length > 0) {
       const avgWin = stats.winningTrades.reduce((sum, t) => sum + getTradePnL(t), 0) / stats.winningTrades.length;
       const avgLoss = stats.losingTrades.reduce((sum, t) => sum + getTradePnL(t), 0) / stats.losingTrades.length;
       rrRatio = Math.abs(avgWin / avgLoss);
     } else if (stats.winningTrades.length > 0 && stats.losingTrades.length === 0) {
-      rrRatio = 100; // High R:R if no losses
+      rrRatio = Infinity;
     }
 
     return {
@@ -623,7 +623,7 @@ export function calculateRiskRewardRatio(trades) {
   const avgWin = calculateAverageProfit(trades);
   const avgLoss = calculateAverageLoss(trades);
 
-  if (avgLoss === 0) return avgWin > 0 ? 100 : 0; // Infinite or zero
+  if (avgLoss === 0) return avgWin > 0 ? Infinity : null;
 
   return Math.abs(avgWin / avgLoss);
 }
@@ -644,7 +644,7 @@ export function calculateProfitFactor(trades) {
     .filter(t => getTradePnL(t) < 0)
     .reduce((sum, t) => sum + Math.abs(getTradePnL(t)), 0);
 
-  if (grossLoss === 0) return grossProfit > 0 ? 100 : 0;
+  if (grossLoss === 0) return grossProfit > 0 ? Infinity : null;
 
   return grossProfit / grossLoss;
 }

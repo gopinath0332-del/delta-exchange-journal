@@ -26,7 +26,7 @@
             <td :class="month.avgPnL >= 0 ? 'profit' : 'loss'">
               {{ formatCurrency(month.avgPnL) }}
             </td>
-            <td>{{ month.rrRatio.toFixed(2) }}</td>
+            <td>{{ formatRatio(month.rrRatio) }}</td>
             <td>{{ formatCurrency(month.funding) }}</td>
             <td>{{ formatCurrency(month.fees) }}</td>
             <td>
@@ -42,7 +42,7 @@
 </template>
 
 <script>
-import { formatCurrency, formatPercentage } from '../utils/formatters';
+import { formatCurrency, formatPercentage, formatRatio } from '../utils/formatters';
 
 export default {
   name: 'MonthlyBreakdownCard',
@@ -56,6 +56,7 @@ export default {
     return {
       formatCurrency,
       formatPercentage,
+      formatRatio,
     };
   },
 };

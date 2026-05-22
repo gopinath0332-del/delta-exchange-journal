@@ -15,9 +15,19 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="stat in sortedStats" :key="stat.symbol">
-            <td class="font-bold">{{ stat.symbol }}</td>
-            <td>{{ stat.tradeCount }}</td>
+          <tr v-if="sortedStats.length === 0">
+            <td colspan="8" class="empty-state">
+              <div class="empty-state-content">
+                <span class="empty-icon">📊</span>
+                <p class="empty-text">No symbol performance data available for this period.</p>
+              </div>
+            </td>
+          </tr>
+          <tr v-else v-for="stat in sortedStats" :key="stat.symbol">
+            <td>
+              <span class="symbol-badge">{{ stat.symbol }}</span>
+            </td>
+            <td class="font-medium">{{ stat.tradeCount }}</td>
             <td :class="stat.winRate >= 50 ? 'profit' : 'loss'">
               {{ formatPercentage(stat.winRate) }}
             </td>
@@ -27,9 +37,15 @@
             <td :class="stat.pnl >= 0 ? 'profit' : 'loss'">
               {{ formatCurrency(stat.pnl) }}
             </td>
-            <td>{{ stat.profitFactor.toFixed(2) }}</td>
-            <td class="profit">{{ formatCurrency(stat.bestTrade) }}</td>
-            <td class="loss">{{ formatCurrency(stat.worstTrade) }}</td>
+            <td :class="getProfitFactorClass(stat.profitFactor)">
+              {{ formatRatio(stat.profitFactor) }}
+            </td>
+            <td :class="stat.bestTrade >= 0 ? 'profit' : 'loss'">
+              {{ formatCurrency(stat.bestTrade) }}
+            </td>
+            <td :class="stat.worstTrade >= 0 ? 'profit' : 'loss'">
+              {{ formatCurrency(stat.worstTrade) }}
+            </td>
           </tr>
         </tbody>
       </table>
@@ -40,7 +56,7 @@
 <script>
 import { computed } from 'vue';
 import { calculatePnLBySymbol } from '../utils/calculations';
-import { formatCurrency, formatPercentage } from '../utils/formatters';
+import { formatCurrency, formatPercentage, formatRatio } from '../utils/formatters';
 
 export default {
   name: 'SymbolPerformanceTable',
@@ -57,10 +73,19 @@ export default {
       return stats.sort((a, b) => b.pnl - a.pnl);
     });
 
+    const getProfitFactorClass = (value) => {
+      if (value === null || value === undefined) return 'neutral';
+      if (value === Infinity || value >= 1.5) return 'profit';
+      if (value >= 1.0) return 'neutral';
+      return 'loss';
+    };
+
     return {
       sortedStats,
       formatCurrency,
       formatPercentage,
+      formatRatio,
+      getProfitFactorClass,
     };
   },
 };
@@ -73,8 +98,12 @@ export default {
 
 .table-container {
   overflow-x: auto;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--glass-shadow);
 }
 
 .table {
@@ -87,10 +116,11 @@ export default {
   padding: var(--spacing-md);
   text-align: left;
   font-size: var(--font-size-xs);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.75px;
   border-bottom: 2px solid var(--glass-border);
+  font-weight: 700;
 }
 
 .table td {
@@ -98,19 +128,89 @@ export default {
   border-bottom: 1px solid var(--glass-border);
   font-size: var(--font-size-sm);
   color: var(--color-text-primary);
+  vertical-align: middle;
+  transition: background-color var(--transition-fast);
+}
+
+.table tr {
+  transition: transform var(--transition-fast), background-color var(--transition-fast);
+}
+
+.table tbody tr:not(.empty-state):hover {
+  background: var(--color-surface-hover);
+  transform: translateY(-1px);
 }
 
 .table tr:last-child td {
   border-bottom: none;
 }
 
-.font-bold {
+.font-medium {
+  font-weight: 500;
+}
+
+.symbol-badge {
+  background: rgba(102, 126, 234, 0.12);
+  border: 1px solid rgba(102, 126, 234, 0.25);
+  padding: 4px 10px;
+  border-radius: var(--radius-md);
+  color: var(--color-primary-light);
   font-weight: 700;
+  font-family: var(--font-family);
+  letter-spacing: 0.5px;
+  display: inline-block;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.light-theme .symbol-badge {
+  background: rgba(102, 126, 234, 0.08);
+  border-color: rgba(102, 126, 234, 0.2);
+  color: var(--color-primary-dark);
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-2xl) !important;
+}
+
+.empty-state-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+}
+
+.empty-icon {
+  font-size: var(--font-size-3xl);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.empty-text {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  margin: 0;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
 }
 
 @media (max-width: 1024px) {
   .table {
     font-size: var(--font-size-xs);
+  }
+  .table th, .table td {
+    padding: var(--spacing-sm);
   }
 }
 </style>

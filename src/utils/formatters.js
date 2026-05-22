@@ -184,3 +184,15 @@ export function formatDaysHeld(entryTimestamp, exitTimestamp) {
     return `${diffHours}h`;
   }
 }
+
+/**
+ * Format a ratio value (like Profit Factor or Risk/Reward)
+ * @param {number} value - Ratio value
+ * @returns {string} Formatted ratio string (e.g., "1.50", "∞", or "—")
+ */
+export function formatRatio(value) {
+  if (value === null || value === undefined || isNaN(value)) return '—';
+  if (value === Infinity) return '∞';
+  return value.toFixed(2);
+}
+
