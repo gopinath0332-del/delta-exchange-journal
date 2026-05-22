@@ -125,6 +125,10 @@
           <h3 class="mb-md">Cumulative PnL Performance</h3>
           <PnLChart :trades="yearTrades" :showMonthFilter="false" />
         </div>
+
+        <div class="glass-card p-xl mb-xl">
+          <PnLDistributionChart :trades="yearTrades" />
+        </div>
       </div>
 
       <!-- ASSETS TAB -->
@@ -198,6 +202,7 @@ import { computed, ref } from 'vue';
 import StatsCard from './StatsCard.vue';
 import TradeCard from './TradeCard.vue';
 import PnLChart from './PnLChart.vue';
+import PnLDistributionChart from './PnLDistributionChart.vue';
 import StreakChart from './StreakChart.vue';
 import StrategyPerformance from './StrategyPerformance.vue';
 import PnLBreakdown from './PnLBreakdown.vue';
@@ -225,6 +230,7 @@ export default {
     StatsCard,
     TradeCard,
     PnLChart,
+    PnLDistributionChart,
     StreakChart,
     StrategyPerformance,
     PnLBreakdown,
