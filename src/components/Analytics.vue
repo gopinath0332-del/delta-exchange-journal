@@ -134,6 +134,11 @@
           <h3 class="mb-md">MAE / MFE Chart</h3>
           <MaeMfeChart :trades="yearTrades" />
         </div>
+
+        <div class="glass-card p-xl mb-xl">
+          <h3 class="mb-md">Equity Curve / Weekly Candlestick</h3>
+          <WeeklyEquityCandlestick :trades="trades" />
+        </div>
       </div>
 
       <!-- ASSETS TAB -->
@@ -214,6 +219,7 @@ import TradeCard from './TradeCard.vue';
 import PnLChart from './PnLChart.vue';
 import PnLDistributionChart from './PnLDistributionChart.vue';
 import MaeMfeChart from './MaeMfeChart.vue';
+import WeeklyEquityCandlestick from './WeeklyEquityCandlestick.vue';
 import StreakChart from './StreakChart.vue';
 import StrategyPerformance from './StrategyPerformance.vue';
 import PnLBreakdown from './PnLBreakdown.vue';
@@ -244,6 +250,7 @@ export default {
     PnLChart,
     PnLDistributionChart,
     MaeMfeChart,
+    WeeklyEquityCandlestick,
     StreakChart,
     StrategyPerformance,
     PnLBreakdown,
