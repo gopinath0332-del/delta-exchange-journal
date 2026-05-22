@@ -129,6 +129,11 @@
         <div class="glass-card p-xl mb-xl">
           <PnLDistributionChart :trades="yearTrades" />
         </div>
+
+        <div class="glass-card p-xl mb-xl">
+          <h3 class="mb-md">MAE / MFE Chart</h3>
+          <MaeMfeChart :trades="yearTrades" />
+        </div>
       </div>
 
       <!-- ASSETS TAB -->
@@ -203,6 +208,7 @@ import StatsCard from './StatsCard.vue';
 import TradeCard from './TradeCard.vue';
 import PnLChart from './PnLChart.vue';
 import PnLDistributionChart from './PnLDistributionChart.vue';
+import MaeMfeChart from './MaeMfeChart.vue';
 import StreakChart from './StreakChart.vue';
 import StrategyPerformance from './StrategyPerformance.vue';
 import PnLBreakdown from './PnLBreakdown.vue';
@@ -231,6 +237,7 @@ export default {
     TradeCard,
     PnLChart,
     PnLDistributionChart,
+    MaeMfeChart,
     StreakChart,
     StrategyPerformance,
     PnLBreakdown,
