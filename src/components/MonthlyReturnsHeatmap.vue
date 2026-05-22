@@ -53,6 +53,8 @@ const getTradeDate = (trade) => {
   return rawExit && !isNaN(rawExit) ? rawExit : rawEntry;
 };
 
+const getTimestamp = (timestamp) => timestamp?.toDate?.() || (timestamp ? new Date(timestamp) : null);
+
 export default {
   name: 'MonthlyReturnsHeatmap',
   props: {
@@ -79,7 +81,9 @@ export default {
               monthIndex: index,
               tradeCount: 0,
               pnl: 0,
-              margin: 0,
+              grossMargin: 0,
+              peakMargin: 0,
+              marginEvents: [],
               returnValues: [],
             })));
           }
@@ -91,8 +95,44 @@ export default {
 
           month.tradeCount += 1;
           month.pnl += pnl;
-          if (Number.isFinite(margin) && margin > 0) month.margin += margin;
+          if (Number.isFinite(margin) && margin > 0) month.grossMargin += margin;
           if (Number.isFinite(pnlPercentage)) month.returnValues.push(pnlPercentage);
+
+          if (Number.isFinite(margin) && margin > 0) {
+            const entryDate = getTimestamp(trade.entry_timestamp) || date;
+            const exitDate = getTimestamp(trade.exit_timestamp) || date;
+            const start = entryDate && !isNaN(entryDate) ? entryDate : date;
+            const end = exitDate && !isNaN(exitDate) && exitDate >= start ? exitDate : start;
+            const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+            const lastMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+
+            while (cursor <= lastMonth) {
+              const activeYear = cursor.getFullYear();
+              const activeMonthIndex = cursor.getMonth();
+
+              if (!yearMap.has(activeYear)) {
+                yearMap.set(activeYear, MONTHS.map((_, index) => ({
+                  monthIndex: index,
+                  tradeCount: 0,
+                  pnl: 0,
+                  grossMargin: 0,
+                  peakMargin: 0,
+                  marginEvents: [],
+                  returnValues: [],
+                })));
+              }
+
+              const activeMonth = yearMap.get(activeYear)[activeMonthIndex];
+              const monthStart = new Date(activeYear, activeMonthIndex, 1);
+              const nextMonthStart = new Date(activeYear, activeMonthIndex + 1, 1);
+              const activeStart = start > monthStart ? start : monthStart;
+              const activeEnd = end < nextMonthStart ? end : nextMonthStart;
+
+              activeMonth.marginEvents.push({ time: activeStart.getTime(), delta: margin });
+              activeMonth.marginEvents.push({ time: activeEnd.getTime(), delta: -margin });
+              cursor.setMonth(cursor.getMonth() + 1);
+            }
+          }
         });
 
       return Array.from(yearMap.entries())
@@ -100,13 +140,21 @@ export default {
         .map(([year, months]) => ({
           year,
           months: months.map((month) => {
+            const peakMargin = month.marginEvents
+              .sort((a, b) => a.time - b.time || b.delta - a.delta)
+              .reduce((state, event) => {
+                state.current += event.delta;
+                state.peak = Math.max(state.peak, state.current);
+                return state;
+              }, { current: 0, peak: 0 }).peak;
             const averageReturn = month.returnValues.length
               ? month.returnValues.reduce((sum, value) => sum + value, 0) / month.returnValues.length
               : 0;
-            const returnPct = month.margin > 0 ? (month.pnl / month.margin) * 100 : averageReturn;
+            const returnPct = peakMargin > 0 ? (month.pnl / peakMargin) * 100 : averageReturn;
 
             return {
               ...month,
+              peakMargin,
               returnPct,
               hasData: month.tradeCount > 0,
             };
@@ -147,6 +195,8 @@ export default {
         `${MONTHS[cell.monthIndex]} ${year}`,
         `Return: ${formatReturn(cell.returnPct)}`,
         `PnL: ${formatCurrency(cell.pnl)}`,
+        `Peak margin used: ${formatCurrency(cell.peakMargin)}`,
+        `Gross deployed margin: ${formatCurrency(cell.grossMargin)}`,
         `Trades: ${cell.tradeCount}`,
       ].join('\n');
     };
