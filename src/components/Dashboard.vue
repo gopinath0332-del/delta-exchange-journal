@@ -26,7 +26,7 @@
     <!-- Key Stats Grid -->
       <div class="mb-lg">
         <!-- Hero Row: Always Visible -->
-        <div class="grid grid-cols-4 mb-lg">
+        <div class="grid grid-cols-3 mb-lg">
           <StatsCard
             label="Net PnL"
             :value="formatCurrency(totalPnL)"
@@ -54,6 +54,20 @@
             :valueClass="dailyStats.avgDailyPnL >= 0 ? 'profit' : 'loss'"
             icon="📊"
             :iconBg="dailyStats.avgDailyPnL >= 0 ? 'var(--gradient-success)' : 'var(--gradient-danger)'"
+          />
+          <StatsCard
+            label="Total Fees"
+            :value="formatCurrency(totalFees)"
+            valueClass="loss"
+            icon="💸"
+            iconBg="var(--gradient-danger)"
+          />
+          <StatsCard
+            label="Total Funding Charge"
+            :value="formatCurrency(totalFunding)"
+            :valueClass="totalFunding >= 0 ? 'profit' : 'loss'"
+            icon="🏦"
+            iconBg="var(--gradient-primary)"
           />
         </div>
 

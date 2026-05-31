@@ -208,7 +208,9 @@ export function calculatePnLBySymbol(trades) {
           grossProfit: 0,
           grossLoss: 0,
           bestTrade: -Infinity,
-          worstTrade: Infinity
+          worstTrade: Infinity,
+          fees: 0,
+          funding: 0
         };
       }
       
@@ -225,6 +227,8 @@ export function calculatePnLBySymbol(trades) {
       
       if (pnl > symbolMap[symbol].bestTrade) symbolMap[symbol].bestTrade = pnl;
       if (pnl < symbolMap[symbol].worstTrade) symbolMap[symbol].worstTrade = pnl;
+      symbolMap[symbol].fees += (trade.trading_fees || 0);
+      symbolMap[symbol].funding += (trade.funding_charges || 0);
     }
   });
 
@@ -236,7 +240,9 @@ export function calculatePnLBySymbol(trades) {
     avgPnL: data.pnl / data.count,
     profitFactor: data.grossLoss === 0 ? (data.grossProfit > 0 ? Infinity : null) : data.grossProfit / data.grossLoss,
     bestTrade: data.bestTrade,
-    worstTrade: data.worstTrade
+    worstTrade: data.worstTrade,
+    fees: data.fees,
+    funding: data.funding
   }));
 }
 

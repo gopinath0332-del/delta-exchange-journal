@@ -4,19 +4,26 @@
       <table class="table">
         <thead>
           <tr>
-            <th>Symbol</th>
-            <th>Trades</th>
-            <th>Win Rate</th>
-            <th>Avg PnL</th>
-            <th>Total PnL</th>
-            <th>Profit Factor</th>
-            <th>Best Trade</th>
-            <th>Worst Trade</th>
+            <th
+              v-for="col in columns"
+              :key="col.key"
+              @click="toggleSort(col.key)"
+              class="sortable-th"
+              :class="{ 'sorted': sortKey === col.key }"
+            >
+              <span class="th-content">
+                {{ col.label }}
+                <span class="sort-icon">
+                  <span v-if="sortKey === col.key">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                  <span v-else class="sort-icon-idle">⇅</span>
+                </span>
+              </span>
+            </th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="sortedStats.length === 0">
-            <td colspan="8" class="empty-state">
+            <td colspan="10" class="empty-state">
               <div class="empty-state-content">
                 <span class="empty-icon">📊</span>
                 <p class="empty-text">No symbol performance data available for this period.</p>
@@ -37,6 +44,12 @@
             <td :class="stat.pnl >= 0 ? 'profit' : 'loss'">
               {{ formatCurrency(stat.pnl) }}
             </td>
+            <td class="loss">
+              {{ formatCurrency(stat.fees) }}
+            </td>
+            <td :class="stat.funding >= 0 ? 'profit' : 'loss'">
+              {{ formatCurrency(stat.funding) }}
+            </td>
             <td :class="getProfitFactorClass(stat.profitFactor)">
               {{ formatRatio(stat.profitFactor) }}
             </td>
@@ -54,7 +67,7 @@
 </template>
 
 <script>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { calculatePnLBySymbol } from '../utils/calculations';
 import { formatCurrency, formatPercentage, formatRatio } from '../utils/formatters';
 
@@ -67,10 +80,54 @@ export default {
     },
   },
   setup(props) {
+    const sortKey = ref('pnl');
+    const sortDir = ref('desc');
+
+    const columns = [
+      { key: 'symbol', label: 'Symbol' },
+      { key: 'tradeCount', label: 'Trades' },
+      { key: 'winRate', label: 'Win Rate' },
+      { key: 'avgPnL', label: 'Avg PnL' },
+      { key: 'pnl', label: 'Total PnL' },
+      { key: 'fees', label: 'Fees' },
+      { key: 'funding', label: 'Funding' },
+      { key: 'profitFactor', label: 'Profit Factor' },
+      { key: 'bestTrade', label: 'Best Trade' },
+      { key: 'worstTrade', label: 'Worst Trade' },
+    ];
+
+    const toggleSort = (key) => {
+      if (sortKey.value === key) {
+        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortKey.value = key;
+        // Default to descending for numeric columns, ascending for symbol
+        sortDir.value = key === 'symbol' ? 'asc' : 'desc';
+      }
+    };
+
     const sortedStats = computed(() => {
       const stats = calculatePnLBySymbol(props.trades);
-      // Sort by Total PnL descending
-      return stats.sort((a, b) => b.pnl - a.pnl);
+      const key = sortKey.value;
+      const dir = sortDir.value === 'asc' ? 1 : -1;
+
+      return stats.sort((a, b) => {
+        let valA = a[key];
+        let valB = b[key];
+
+        // Handle Infinity for profitFactor (treat as very large number)
+        if (valA === Infinity) valA = Number.MAX_VALUE;
+        if (valB === Infinity) valB = Number.MAX_VALUE;
+        if (valA === null || valA === undefined) valA = -Number.MAX_VALUE;
+        if (valB === null || valB === undefined) valB = -Number.MAX_VALUE;
+
+        // String comparison for symbol
+        if (key === 'symbol') {
+          return dir * String(valA).localeCompare(String(valB));
+        }
+
+        return dir * (valA - valB);
+      });
     });
 
     const getProfitFactorClass = (value) => {
@@ -81,6 +138,10 @@ export default {
     };
 
     return {
+      columns,
+      sortKey,
+      sortDir,
+      toggleSort,
       sortedStats,
       formatCurrency,
       formatPercentage,
@@ -121,6 +182,43 @@ export default {
   letter-spacing: 0.75px;
   border-bottom: 2px solid var(--glass-border);
   font-weight: 700;
+}
+
+.sortable-th {
+  cursor: pointer;
+  user-select: none;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.sortable-th:hover {
+  color: var(--color-text-primary);
+  background: var(--color-surface-hover);
+}
+
+.sortable-th.sorted {
+  color: var(--color-primary-light);
+}
+
+.th-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sort-icon {
+  font-size: 0.7rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.sort-icon-idle {
+  opacity: 0.3;
+  transition: opacity var(--transition-fast);
+}
+
+.sortable-th:hover .sort-icon-idle {
+  opacity: 0.7;
 }
 
 .table td {
