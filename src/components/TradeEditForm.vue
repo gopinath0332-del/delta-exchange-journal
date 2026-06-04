@@ -22,7 +22,7 @@
       </button>
     </div>
 
-    <form @submit.prevent="handleSubmit" class="form-content">
+    <form @submit.prevent="handleSubmit" novalidate class="form-content">
 
       <!-- ===== TAB: General ===== -->
       <div v-show="activeTab === 'general'">
@@ -73,7 +73,7 @@
             </div>
             <div class="form-group">
               <label>Entry Price</label>
-              <input v-model.number="formData.entry_price" type="number" step="0.000001" class="input" required />
+              <input v-model.number="formData.entry_price" type="number" step="any" class="input" required />
             </div>
             <div class="form-group">
               <label>Entry Side</label>
@@ -98,7 +98,7 @@
           <div class="grid grid-cols-2 gap-md">
             <div class="form-group">
               <label>Exit Price</label>
-              <input v-model.number="formData.exit_price" type="number" step="0.000001" class="input" />
+              <input v-model.number="formData.exit_price" type="number" step="any" class="input" />
             </div>
             <div class="form-group">
               <label>Exit Side</label>
@@ -123,15 +123,15 @@
           <div class="grid grid-cols-3 gap-md">
             <div class="form-group">
               <label>PnL ($)</label>
-              <input v-model.number="formData.pnl" type="number" step="0.0001" class="input" :class="getPnLClass(formData.pnl)" />
+              <input v-model.number="formData.pnl" type="number" step="any" class="input" :class="getPnLClass(formData.pnl)" />
             </div>
             <div class="form-group">
               <label>R-Multiple</label>
-              <input v-model.number="formData.r_multiple" type="number" step="0.01" class="input" />
+              <input v-model.number="formData.r_multiple" type="number" step="any" class="input" />
             </div>
             <div class="form-group">
               <label>Days Held</label>
-              <input v-model.number="formData.days_held" type="number" step="0.01" class="input" />
+              <input v-model.number="formData.days_held" type="number" step="any" class="input" />
             </div>
           </div>
         </div>
@@ -160,7 +160,7 @@
         <div v-else class="events-list">
           <div
             v-for="(event, idx) in events"
-            :key="idx"
+            :key="event.tempId || idx"
             class="event-card"
             :class="getEventClass(event.action)"
           >
@@ -201,15 +201,15 @@
               </div>
               <div class="form-group">
                 <label>Price</label>
-                <input v-model.number="event.price" type="number" step="0.000001" class="input" />
+                <input v-model.number="event.price" type="number" step="any" class="input" />
               </div>
               <div class="form-group">
                 <label>Order Size</label>
-                <input v-model.number="event.order_size" type="number" step="1" class="input" />
+                <input v-model.number="event.order_size" type="number" step="any" class="input" />
               </div>
               <div class="form-group">
                 <label>PnL ($)</label>
-                <input v-model.number="event.pnl" type="number" step="0.0001" class="input" :class="getPnLClass(event.pnl)" />
+                <input v-model.number="event.pnl" type="number" step="any" class="input" :class="getPnLClass(event.pnl)" />
               </div>
               <div class="form-group">
                 <label>Timestamp</label>
@@ -275,8 +275,9 @@ export default {
 
       // Deep-clone events array, converting Firestore Timestamps to strings
       const rawEvents = props.trade.events || [];
-      events.value = rawEvents.map(e => ({
+      events.value = rawEvents.map((e, index) => ({
         ...e,
+        tempId: `${Date.now()}-${index}-${Math.random()}`,
         timestamp: e.timestamp
           ? (e.timestamp.toDate?.() || new Date(e.timestamp))
           : null,
@@ -322,6 +323,7 @@ export default {
 
     const addEvent = () => {
       events.value.push({
+        tempId: `${Date.now()}-${Math.random()}`,
         action: 'PARTIAL_EXIT',
         side: 'sell',
         price: null,
@@ -338,11 +340,27 @@ export default {
     };
 
     const handleSubmit = async () => {
+      // Validate required fields manually since we use 'novalidate' on the form to avoid browser focusing issues
+      if (!formData.value.symbol) {
+        alert('Symbol is required');
+        return;
+      }
+      if (!entryDateStr.value) {
+        alert('Entry Date is required');
+        return;
+      }
+      if (formData.value.entry_price === null || formData.value.entry_price === undefined || formData.value.entry_price === '') {
+        alert('Entry Price is required');
+        return;
+      }
+
       loading.value = true;
       try {
         // Serialize events: convert Date objects back to ISO strings for Firestore
         const serializedEvents = events.value.map(e => {
           const evt = { ...e };
+          // Remove client-only tempId before serializing
+          delete evt.tempId;
           if (evt.timestamp instanceof Date) {
             evt.timestamp = evt.timestamp.toISOString();
           }
