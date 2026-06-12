@@ -8,6 +8,25 @@
             <div class="logo">
               <h1>📈 Trading Journal</h1>
             </div>
+
+            <!-- Profile Switcher -->
+            <div class="profile-switcher">
+              <button 
+                :class="['profile-btn', 'live', { active: profileMode === 'LIVE' }]" 
+                @click="setProfileMode('LIVE')"
+                title="Live Trading Profile"
+              >
+                <span class="dot"></span> Live
+              </button>
+              <button 
+                :class="['profile-btn', 'paper', { active: profileMode === 'PAPER' }]" 
+                @click="setProfileMode('PAPER')"
+                title="Paper Trading Profile"
+              >
+                <span class="dot"></span> Paper
+              </button>
+            </div>
+
             <button class="menu-toggle" @click="isMenuOpen = !isMenuOpen" aria-label="Toggle Menu">
               <span class="hamburger" :class="{ 'open': isMenuOpen }"></span>
             </button>
@@ -38,9 +57,9 @@
       <!-- Main Content -->
       <main class="app-main">
         <div class="container">
-          <Dashboard v-if="currentView === 'dashboard'" :trades="trades" />
+          <Dashboard v-if="currentView === 'dashboard'" :trades="trades" :profileMode="profileMode" />
           <Analytics v-else-if="currentView === 'analytics'" :trades="trades" />
-          <AllTrades v-else-if="currentView === 'trades'" />
+          <AllTrades v-else-if="currentView === 'trades'" :trades="trades" />
           <CalendarView v-else-if="currentView === 'calendar'" :trades="trades" />
         </div>
       </main>
@@ -56,7 +75,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import Dashboard from './components/Dashboard.vue';
 import Analytics from './components/Analytics.vue';
 import AllTrades from './components/AllTrades.vue';
@@ -74,10 +93,22 @@ export default {
   },
   setup() {
     const currentView = ref('dashboard');
-    const trades = ref([]);
+    const allTrades = ref([]);
+    const profileMode = ref(localStorage.getItem('profileMode') || 'LIVE');
     const isLightMode = ref(true);
     const isMenuOpen = ref(false);
     let unsubscribe = null;
+
+    const setProfileMode = (mode) => {
+      profileMode.value = mode;
+      localStorage.setItem('profileMode', mode);
+    };
+
+    const trades = computed(() => {
+      return allTrades.value.filter(
+        t => (t.mode || 'LIVE').toUpperCase() === profileMode.value
+      );
+    });
 
     const toggleTheme = () => {
       isLightMode.value = !isLightMode.value;
@@ -100,7 +131,7 @@ export default {
       }
 
       unsubscribe = subscribeToTrades(TRADE_COLLECTION, (newTrades) => {
-        trades.value = newTrades;
+        allTrades.value = newTrades;
       });
     });
 
@@ -113,6 +144,8 @@ export default {
     return {
       currentView,
       trades,
+      profileMode,
+      setProfileMode,
       isLightMode,
       isMenuOpen,
       toggleTheme,
@@ -206,6 +239,68 @@ export default {
   background-clip: text;
 }
 
+/* Profile Switcher Styles */
+.profile-switcher {
+  display: flex;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  border: 1px solid var(--glass-border);
+  gap: 4px;
+  margin: 0 var(--spacing-md);
+}
+
+.profile-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: var(--font-family);
+}
+
+.profile-btn:hover {
+  color: var(--color-text-primary);
+  background: var(--color-surface-hover);
+}
+
+.profile-btn .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  display: inline-block;
+  background: currentColor;
+}
+
+.profile-btn.live .dot {
+  background: var(--color-profit);
+  box-shadow: 0 0 8px var(--color-profit);
+}
+
+.profile-btn.paper .dot {
+  background: var(--color-warning);
+  box-shadow: 0 0 8px var(--color-warning);
+}
+
+.profile-btn.live.active {
+  background: var(--color-profit-bg);
+  color: var(--color-profit);
+  border-color: var(--color-profit-border);
+}
+
+.profile-btn.paper.active {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
 .nav {
   display: flex;
   align-items: center;
@@ -273,6 +368,15 @@ export default {
     align-items: center;
   }
 
+  .profile-switcher {
+    margin: 0;
+  }
+
+  .profile-btn {
+    padding: var(--spacing-xs) var(--spacing-md);
+    font-size: var(--font-size-xs);
+  }
+
   .nav {
     position: fixed;
     top: 0;
@@ -309,6 +413,15 @@ export default {
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(4px);
     z-index: 101;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo h1 {
+    font-size: var(--font-size-lg);
+  }
+  .profile-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
   }
 }
 </style>

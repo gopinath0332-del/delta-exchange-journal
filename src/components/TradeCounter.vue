@@ -39,7 +39,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { subscribeToTradeCounter, updateTradeCounter } from '../firebase/settings';
 
 export default {
@@ -47,6 +47,10 @@ export default {
   props: {
     totalTrades: {
       type: Number,
+      required: true,
+    },
+    profileMode: {
+      type: String,
       required: true,
     },
   },
@@ -60,12 +64,24 @@ export default {
     const startTradeCount = ref(0);
     let unsubscribe = null;
 
-    onMounted(() => {
-      unsubscribe = subscribeToTradeCounter((settings) => {
+    const loadCounter = () => {
+      loading.value = true;
+      if (unsubscribe) {
+        unsubscribe();
+      }
+      unsubscribe = subscribeToTradeCounter(props.profileMode, (settings) => {
         targetCount.value = settings.targetCount || 0;
         startTradeCount.value = settings.startTradeCount || 0;
         loading.value = false;
       });
+    };
+
+    onMounted(() => {
+      loadCounter();
+    });
+
+    watch(() => props.profileMode, () => {
+      loadCounter();
     });
 
     onUnmounted(() => {
@@ -80,7 +96,7 @@ export default {
 
     const handleReset = async () => {
       try {
-        await updateTradeCounter(resetValue.value, props.totalTrades);
+        await updateTradeCounter(props.profileMode, resetValue.value, props.totalTrades);
         showReset.value = false;
       } catch (error) {
         alert('Failed to update counter. Please check your connection.');

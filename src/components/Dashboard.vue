@@ -8,7 +8,7 @@
 
     <!-- Trade Counter -->
     <div class="mb-lg">
-      <TradeCounter :totalTrades="trades.length" />
+      <TradeCounter :totalTrades="trades.length" :profileMode="profileMode" />
     </div>
 
     <!-- Global Year Filter -->
@@ -218,6 +218,10 @@ export default {
   props: {
     trades: {
       type: Array,
+      required: true,
+    },
+    profileMode: {
+      type: String,
       required: true,
     },
   },

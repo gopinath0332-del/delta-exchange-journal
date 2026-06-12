@@ -9,12 +9,14 @@ const COUNTER_DOC_ID = 'trade_counter';
 const SETTINGS_COLLECTION = 'settings';
 
 /**
- * Subscribe to the trade counter settings
+ * Subscribe to the trade counter settings for a specific profile
+ * @param {string} profileMode - The active profile ('LIVE' or 'PAPER')
  * @param {Function} callback - Function to call when settings update
  * @returns {Function} Unsubscribe function
  */
-export function subscribeToTradeCounter(callback) {
-  const counterDocRef = doc(db, SETTINGS_COLLECTION, COUNTER_DOC_ID);
+export function subscribeToTradeCounter(profileMode, callback) {
+  const docId = `trade_counter_${(profileMode || 'live').toLowerCase()}`;
+  const counterDocRef = doc(db, SETTINGS_COLLECTION, docId);
 
   return onSnapshot(
     counterDocRef,
@@ -27,20 +29,22 @@ export function subscribeToTradeCounter(callback) {
       }
     },
     (error) => {
-      console.error('Error subscribing to trade counter settings:', error);
+      console.error(`Error subscribing to trade counter settings (${docId}):`, error);
       callback({ targetCount: 0, startTradeCount: 0 });
     }
   );
 }
 
 /**
- * Update the trade counter settings in Firestore
+ * Update the trade counter settings in Firestore for a specific profile
+ * @param {string} profileMode - The active profile ('LIVE' or 'PAPER')
  * @param {number} targetCount - The target number of trades
  * @param {number} startTradeCount - The total trades count at the time of reset
  * @returns {Promise<void>}
  */
-export async function updateTradeCounter(targetCount, startTradeCount) {
-  const counterDocRef = doc(db, SETTINGS_COLLECTION, COUNTER_DOC_ID);
+export async function updateTradeCounter(profileMode, targetCount, startTradeCount) {
+  const docId = `trade_counter_${(profileMode || 'live').toLowerCase()}`;
+  const counterDocRef = doc(db, SETTINGS_COLLECTION, docId);
   
   try {
     await setDoc(counterDocRef, {
@@ -49,7 +53,7 @@ export async function updateTradeCounter(targetCount, startTradeCount) {
       updatedAt: new Date().toISOString(),
     }, { merge: true });
   } catch (error) {
-    console.error('Error updating trade counter settings:', error);
+    console.error(`Error updating trade counter settings (${docId}):`, error);
     throw error;
   }
 }

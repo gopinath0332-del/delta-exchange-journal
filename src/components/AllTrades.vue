@@ -49,48 +49,38 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, computed } from 'vue';
 import TradeList from './TradeList.vue';
-import { subscribeToTrades } from '../firebase/tradeService';
-import { TRADE_COLLECTION } from '../firebase/constants';
 
 export default {
   name: 'AllTrades',
   components: {
     TradeList,
   },
-  setup() {
-    const trades = ref([]);
-    const loading = ref(true);
+  props: {
+    trades: {
+      type: Array,
+      required: true,
+    },
+  },
+  setup(props) {
     const activeTab = ref('all');
-    let unsubscribe = null;
 
-    onMounted(() => {
-      unsubscribe = subscribeToTrades(TRADE_COLLECTION, (newTrades) => {
-        trades.value = newTrades;
-        loading.value = false;
-      });
-    });
-
-    const openTrades = computed(() => trades.value.filter(t => t.status === 'OPEN'));
-    const partialTrades = computed(() => trades.value.filter(t => t.status === 'PARTIAL_CLOSED'));
-    const closedTrades = computed(() => trades.value.filter(t => t.status === 'CLOSED'));
+    const openTrades = computed(() => props.trades.filter(t => t.status === 'OPEN'));
+    const partialTrades = computed(() => props.trades.filter(t => t.status === 'PARTIAL_CLOSED'));
+    const closedTrades = computed(() => props.trades.filter(t => t.status === 'CLOSED'));
 
     const filteredTrades = computed(() => {
       if (activeTab.value === 'open') return openTrades.value;
       if (activeTab.value === 'partial') return partialTrades.value;
       if (activeTab.value === 'closed') return closedTrades.value;
-      return trades.value;
+      return props.trades;
     });
 
-    onUnmounted(() => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    });
+    const loading = computed(() => !props.trades);
 
     return {
-      trades,
+      trades: computed(() => props.trades),
       loading,
       activeTab,
       openTrades,
