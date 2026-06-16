@@ -62,7 +62,7 @@
       <div v-if="trade.status === 'CLOSED' || trade.status === 'PARTIAL_CLOSED'" class="detail-row">
         <span class="detail-label">PnL %</span>
         <span class="detail-value" :class="pnlClass">
-          {{ formatPercentage(trade.pnl_percentage || 0) }}
+          {{ formatPercentage(calculatedPnLPercentage) }}
         </span>
       </div>
 
@@ -179,7 +179,7 @@
 <script>
 import { computed } from 'vue';
 import { formatCurrency, formatDate, formatPercentage, formatDaysHeld, formatMode } from '../utils/formatters';
-import { calculateDisciplineScore, getTradePnL } from '../utils/calculations';
+import { calculateDisciplineScore, calculateTradePnLPercentage, getTradePnL } from '../utils/calculations';
 
 export default {
   name: 'TradeCard',
@@ -201,6 +201,8 @@ export default {
 
     const disciplineScore = computed(() => calculateDisciplineScore(props.trade));
 
+    const calculatedPnLPercentage = computed(() => calculateTradePnLPercentage(props.trade));
+
     const formattedPnL = computed(() => {
       if (props.trade.status === 'OPEN') return 'OPEN';
       return formatCurrency(getTradePnL(props.trade));
@@ -213,6 +215,7 @@ export default {
     return {
       pnlClass,
       disciplineScore,
+      calculatedPnLPercentage,
       formattedPnL,
       daysHeld,
       formatCurrency,
