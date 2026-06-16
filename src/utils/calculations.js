@@ -23,6 +23,24 @@ export function getTradePnL(trade) {
 }
 
 /**
+ * Calculate a trade return percentage from realized PnL and margin used.
+ * This keeps the displayed PnL % aligned with the displayed PnL, including
+ * trades where realized PnL is summed from exit events. If margin is not
+ * available, fall back to a stored pnl_percentage value when valid.
+ * @param {Object} trade
+ * @returns {number}
+ */
+export function calculateTradePnLPercentage(trade) {
+  const marginUsed = Number(trade?.margin_used);
+  if (Number.isFinite(marginUsed) && marginUsed > 0) {
+    return (getTradePnL(trade) / marginUsed) * 100;
+  }
+
+  const storedPercentage = Number(trade?.pnl_percentage);
+  return Number.isFinite(storedPercentage) ? storedPercentage : 0;
+}
+
+/**
  * Calculate total PnL from an array of trades
  * @param {Array} trades - Array of trade objects
  * @returns {number} Total PnL
