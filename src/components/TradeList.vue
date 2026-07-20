@@ -99,6 +99,10 @@
               Days
               <span v-if="sortColumn === 'days_held'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
             </th>
+            <th @click="sortBy('margin_used')" class="sortable">
+              {{ collectionStore.activeCollection === TRADE_COLLECTION ? 'Margin Used' : 'Premium Collected' }}
+              <span v-if="sortColumn === 'margin_used'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
+            </th>
             <th>Leverage</th>
             <th>Strategy</th>
             <th class="tight-col">Status</th>
@@ -109,7 +113,7 @@
         <tbody>
           <!-- Bottom/Top Spacers for Virtual Scrolling -->
           <tr v-if="paddingTop > 0" :style="{ height: paddingTop + 'px' }">
-            <td colspan="12" style="padding: 0; border: none; height: inherit;"></td>
+            <td colspan="13" style="padding: 0; border: none; height: inherit;"></td>
           </tr>
 
           <tr
@@ -141,6 +145,9 @@
               {{ trade.r_multiple != null ? trade.r_multiple.toFixed(2) + 'R' : '-' }}
             </td>
             <td @click="selectTrade(trade)">{{ trade.days_held != null ? trade.days_held + 'd' : '-' }}</td>
+            <td @click="selectTrade(trade)">
+              {{ formatCurrency(collectionStore.activeCollection === TRADE_COLLECTION ? trade.margin_used : trade.total_premium_collected, '') }}
+            </td>
             <td @click="selectTrade(trade)">{{ trade.leverage != null ? trade.leverage + 'x' : '-' }}</td>
             <td @click="selectTrade(trade)">{{ trade.strategy_name || 'N/A' }}</td>
             <td @click="selectTrade(trade)" class="tight-col">
@@ -162,7 +169,7 @@
 
           <!-- Bottom Spacer for Virtual Scrolling -->
           <tr v-if="paddingBottom > 0" :style="{ height: paddingBottom + 'px' }">
-            <td colspan="12" style="padding: 0; border: none; height: inherit;"></td>
+            <td colspan="13" style="padding: 0; border: none; height: inherit;"></td>
           </tr>
         </tbody>
       </table>
@@ -200,6 +207,8 @@ import TradeCard from './TradeCard.vue';
 import TradeEditForm from './TradeEditForm.vue';
 import { formatCurrency, formatShortDate } from '../utils/formatters';
 import { getTradePnL } from '../utils/calculations';
+import { collectionStore } from '../firebase/collectionStore';
+import { TRADE_COLLECTION } from '../firebase/constants';
 
 export default {
   name: 'TradeList',
