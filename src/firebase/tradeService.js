@@ -14,8 +14,25 @@ import {
 } from 'firebase/firestore';
 
 /**
+ * Normalize trade data based on the collection source
+ * @param {Object} data - The raw document data from Firestore
+ * @param {string} collectionName - The name of the collection the data came from
+ * @returns {Object} Normalized trade data
+ */
+const normalizeTradeData = (data, collectionName) => {
+  if (collectionName === 'options') {
+    return {
+      ...data,
+      symbol: data.underlying || data.symbol,
+      pnl: data.realized_pnl !== undefined ? data.realized_pnl : data.pnl,
+    };
+  }
+  return data;
+};
+
+/**
  * Get a reference to a collection
- * @param {string} collectionName 
+ * @param {string} collectionName
  * @returns CollectionReference
  */
 const getRef = (collectionName) => collection(db, collectionName);
@@ -36,7 +53,7 @@ export function subscribeToTrades(collectionName, callback) {
       snapshot.forEach((doc) => {
         trades.push({
           id: doc.id,
-          ...doc.data(),
+          ...normalizeTradeData(doc.data(), collectionName),
         });
       });
       callback(trades);
@@ -69,7 +86,7 @@ export function subscribeToTradesByStatus(collectionName, status, callback) {
       snapshot.forEach((doc) => {
         trades.push({
           id: doc.id,
-          ...doc.data(),
+          ...normalizeTradeData(doc.data(), collectionName),
         });
       });
       callback(trades);
@@ -102,7 +119,7 @@ export function subscribeToTradesBySymbol(collectionName, symbol, callback) {
       snapshot.forEach((doc) => {
         trades.push({
           id: doc.id,
-          ...doc.data(),
+          ...normalizeTradeData(doc.data(), collectionName),
         });
       });
       callback(trades);
@@ -135,7 +152,7 @@ export function subscribeToTradesByStrategy(collectionName, strategyName, callba
       snapshot.forEach((doc) => {
         trades.push({
           id: doc.id,
-          ...doc.data(),
+          ...normalizeTradeData(doc.data(), collectionName),
         });
       });
       callback(trades);
@@ -167,7 +184,7 @@ export async function getTradesByDateRange(collectionName, startDate, endDate) {
   snapshot.forEach((doc) => {
     trades.push({
       id: doc.id,
-      ...doc.data(),
+      ...normalizeTradeData(doc.data(), collectionName),
     });
   });
 
@@ -191,7 +208,7 @@ export async function getAllClosedTrades(collectionName) {
   snapshot.forEach((doc) => {
     trades.push({
       id: doc.id,
-      ...doc.data(),
+      ...normalizeTradeData(doc.data(), collectionName),
     });
   });
 
