@@ -11,19 +11,36 @@
 
             <!-- Profile Switcher -->
             <div class="profile-switcher">
-              <button 
-                :class="['profile-btn', 'live', { active: profileMode === 'LIVE' }]" 
+              <button
+                :class="['profile-btn', 'live', { active: profileMode === 'LIVE' }]"
                 @click="setProfileMode('LIVE')"
                 title="Live Trading Profile"
               >
                 <span class="dot"></span> Live
               </button>
-              <button 
-                :class="['profile-btn', 'paper', { active: profileMode === 'PAPER' }]" 
+              <button
+                :class="['profile-btn', 'paper', { active: profileMode === 'PAPER' }]"
                 @click="setProfileMode('PAPER')"
                 title="Paper Trading Profile"
               >
                 <span class="dot"></span> Paper
+              </button>
+            </div>
+
+            <div class="collection-switcher">
+              <button
+                :class="['collection-btn', { active: collectionStore.activeCollection === TRADE_COLLECTION }]"
+                @click="collectionStore.setActiveCollection(TRADE_COLLECTION)"
+                title="Trades Collection"
+              >
+                Trades
+              </button>
+              <button
+                :class="['collection-btn', { active: collectionStore.activeCollection === OPTIONS_COLLECTION }]"
+                @click="collectionStore.setActiveCollection(OPTIONS_COLLECTION)"
+                title="Options Collection"
+              >
+                Options
               </button>
             </div>
 
@@ -75,13 +92,14 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import Dashboard from './components/Dashboard.vue';
 import Analytics from './components/Analytics.vue';
 import AllTrades from './components/AllTrades.vue';
 import CalendarView from './components/CalendarView.vue';
 import { subscribeToTrades } from './firebase/tradeService';
-import { TRADE_COLLECTION } from './firebase/constants';
+import { TRADE_COLLECTION, OPTIONS_COLLECTION } from './firebase/constants';
+import { collectionStore } from './firebase/collectionStore';
 
 export default {
   name: 'App',
@@ -116,6 +134,13 @@ export default {
       document.documentElement.classList.toggle('light-theme', isLightMode.value);
     };
 
+    const startSubscription = () => {
+      if (unsubscribe) unsubscribe();
+      unsubscribe = subscribeToTrades(collectionStore.activeCollection, (newTrades) => {
+        allTrades.value = newTrades;
+      });
+    };
+
     // Subscribe to trades for all views
     onMounted(() => {
       // Initialize theme
@@ -130,9 +155,11 @@ export default {
         document.documentElement.classList.add('light-theme');
       }
 
-      unsubscribe = subscribeToTrades(TRADE_COLLECTION, (newTrades) => {
-        allTrades.value = newTrades;
-      });
+      startSubscription();
+    });
+
+    watch(() => collectionStore.activeCollection, () => {
+      startSubscription();
     });
 
     onUnmounted(() => {
@@ -149,6 +176,7 @@ export default {
       isLightMode,
       isMenuOpen,
       toggleTheme,
+      collectionStore,
     };
   },
 };
@@ -299,6 +327,40 @@ export default {
   background: var(--color-warning-bg);
   color: var(--color-warning);
   border-color: rgba(245, 158, 11, 0.3);
+}
+
+.collection-switcher {
+  display: flex;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  border: 1px solid var(--glass-border);
+  gap: 4px;
+  margin: 0 var(--spacing-md);
+}
+
+.collection-btn {
+  padding: var(--spacing-xs) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: var(--font-family);
+}
+
+.collection-btn:hover {
+  color: var(--color-text-primary);
+  background: var(--color-surface-hover);
+}
+
+.collection-btn.active {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border-color: var(--glass-border);
 }
 
 .nav {

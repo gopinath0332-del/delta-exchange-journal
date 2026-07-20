@@ -243,7 +243,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { updateTrade, deleteTrade } from '../firebase/tradeService';
-import { TRADE_COLLECTION } from '../firebase/constants';
+import { collectionStore } from '../firebase/collectionStore';
 
 export default {
   name: 'TradeEditForm',
@@ -374,7 +374,7 @@ export default {
           events: serializedEvents,
         };
 
-        const result = await updateTrade(TRADE_COLLECTION, props.trade.id, updatedData);
+        const result = await updateTrade(collectionStore.activeCollection, props.trade.id, updatedData);
         if (result.success) {
           emit('updated');
         } else {
@@ -400,7 +400,7 @@ export default {
         if (confirm(`Are you sure you want to delete the trade for ${props.trade.symbol}? This cannot be undone.`)) {
           loading.value = true;
           try {
-            const result = await deleteTrade(TRADE_COLLECTION, props.trade.id);
+            const result = await deleteTrade(collectionStore.activeCollection, props.trade.id);
             if (result.success) {
               emit('updated');
             } else {
