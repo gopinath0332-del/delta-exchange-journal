@@ -473,6 +473,7 @@ export default {
       onTradeUpdated() {
         editingTrade.value = null;
       },
+      collectionStore,
       // Virtual scroll exports
       containerRef,
       handleScroll,
