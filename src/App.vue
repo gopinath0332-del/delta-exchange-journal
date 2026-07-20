@@ -177,6 +177,8 @@ export default {
       isMenuOpen,
       toggleTheme,
       collectionStore,
+      TRADE_COLLECTION,
+      OPTIONS_COLLECTION,
     };
   },
 };
