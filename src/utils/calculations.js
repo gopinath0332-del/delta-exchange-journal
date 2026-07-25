@@ -1,13 +1,13 @@
 // Utility functions for calculating trading statistics and metrics
 
 /**
- * Get the total realized PnL for a trade.
+ * Get the gross realized PnL for a trade (excluding fees & funding).
  * If the trade has an events array with exit PnL values, sums those.
  * Otherwise falls back to trade.pnl.
  * @param {Object} trade
  * @returns {number}
  */
-export function getTradePnL(trade) {
+export function getTradeGrossPnL(trade) {
   if (Array.isArray(trade.events) && trade.events.length > 0) {
     const exitPnls = trade.events
       .filter(e => {
@@ -21,6 +21,28 @@ export function getTradePnL(trade) {
   }
   return typeof trade.pnl === 'number' ? trade.pnl : 0;
 }
+
+/**
+ * Get the net realized PnL for a trade (gross PnL - trading_fees + funding_charges).
+ * @param {Object} trade
+ * @returns {number}
+ */
+export function getTradeNetPnL(trade) {
+  const grossPnL = getTradeGrossPnL(trade);
+  const fees = typeof trade.trading_fees === 'number' ? trade.trading_fees : 0;
+  const funding = typeof trade.funding_charges === 'number' ? trade.funding_charges : 0;
+  return grossPnL - fees + funding;
+}
+
+/**
+ * Get the total realized Net PnL for a trade.
+ * @param {Object} trade
+ * @returns {number}
+ */
+export function getTradePnL(trade) {
+  return getTradeNetPnL(trade);
+}
+
 
 /**
  * Calculate a trade return percentage from realized PnL and margin used.
@@ -736,11 +758,11 @@ export function calculateDailyStats(dailyPnLMap) {
 export function calculateGrossTotals(trades) {
   const closedTrades = trades.filter(t => t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED');
   const totalProfit = closedTrades
-    .filter(t => getTradePnL(t) > 0)
-    .reduce((sum, t) => sum + getTradePnL(t), 0);
+    .filter(t => getTradeGrossPnL(t) > 0)
+    .reduce((sum, t) => sum + getTradeGrossPnL(t), 0);
   const totalLoss = closedTrades
-    .filter(t => getTradePnL(t) < 0)
-    .reduce((sum, t) => sum + getTradePnL(t), 0);
+    .filter(t => getTradeGrossPnL(t) < 0)
+    .reduce((sum, t) => sum + getTradeGrossPnL(t), 0);
 
   return { totalProfit, totalLoss };
 }
