@@ -155,6 +155,12 @@
           <PnLBreakdown :trades="yearTrades" :showMonthFilter="false" />
         </div>
 
+        <!-- Funding Fees by Symbol -->
+        <div class="glass-card p-xl mb-xl">
+          <h3 class="mb-md">Funding Fees by Symbol</h3>
+          <FundingBySymbol :trades="yearTrades" />
+        </div>
+
         <!-- Per-Symbol Equity Curve -->
         <div class="glass-card p-xl mb-xl">
           <h3 class="mb-md">PnL Equity Curve by Symbol</h3>
@@ -231,6 +237,7 @@ import StrategyPerformance from './StrategyPerformance.vue';
 import PnLBreakdown from './PnLBreakdown.vue';
 import SymbolPerformanceTable from './SymbolPerformanceTable.vue';
 import SymbolEquityCurve from './SymbolEquityCurve.vue';
+import FundingBySymbol from './FundingBySymbol.vue';
 import CalendarHeatmap from './CalendarHeatmap.vue';
 import MonthlyReturnsHeatmap from './MonthlyReturnsHeatmap.vue';
 import TimeAnalysis from './TimeAnalysis.vue';
@@ -263,6 +270,7 @@ export default {
     PnLBreakdown,
     SymbolPerformanceTable,
     SymbolEquityCurve,
+    FundingBySymbol,
     CalendarHeatmap,
     MonthlyReturnsHeatmap,
     TimeAnalysis,
