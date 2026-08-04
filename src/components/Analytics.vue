@@ -195,6 +195,10 @@
       <!-- ACTIVITY TAB -->
       <div v-if="activeSubTab === 'activity'" class="fade-in">
         <div class="glass-card p-xl mb-xl">
+          <h3 class="mb-md">Fees by Date</h3>
+          <FeesChart :trades="yearTrades" />
+        </div>
+        <div class="glass-card p-xl mb-xl">
           <h3 class="mb-md">Monthly Returns Heatmap</h3>
           <MonthlyReturnsHeatmap :trades="trades" />
         </div>
@@ -241,6 +245,7 @@ import FundingBySymbol from './FundingBySymbol.vue';
 import CalendarHeatmap from './CalendarHeatmap.vue';
 import MonthlyReturnsHeatmap from './MonthlyReturnsHeatmap.vue';
 import TimeAnalysis from './TimeAnalysis.vue';
+import FeesChart from './FeesChart.vue';
 import {
   getBestTrade,
   getWorstTrade,
@@ -274,6 +279,7 @@ export default {
     CalendarHeatmap,
     MonthlyReturnsHeatmap,
     TimeAnalysis,
+    FeesChart,
   },
   props: {
     trades: {

@@ -366,6 +366,24 @@ export function calculateMonthlyBreakdown(trades) {
 }
 
 /**
+ * Calculate fees mapped by date
+ * @param {Array} trades - Array of trade objects
+ * @returns {Object} Map of "YYYY-MM-DD" -> totalFees
+ */
+export function calculateDailyFeesMap(trades) {
+  const dailyMap = {};
+  trades.forEach(trade => {
+    const rawExit = trade.exit_timestamp?.toDate?.() || (trade.exit_timestamp ? new Date(trade.exit_timestamp) : null);
+    const rawEntry = trade.entry_timestamp?.toDate?.() || (trade.entry_timestamp ? new Date(trade.entry_timestamp) : null);
+    const date = (rawExit && !isNaN(rawExit)) ? rawExit : rawEntry;
+    if (!date || isNaN(date)) return;
+    const dateKey = date.toISOString().split('T')[0];
+    dailyMap[dateKey] = (dailyMap[dateKey] || 0) + (trade.trading_fees || 0);
+  });
+  return dailyMap;
+}
+
+/**
  * Calculate total fees paid
  *
  *
