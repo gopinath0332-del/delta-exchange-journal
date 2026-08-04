@@ -53,6 +53,7 @@ export default {
       const ctx = chartCanvas.value.getContext('2d');
 
       chartInstance = new Chart(ctx, {
+        type: 'bar',
         data: {
           labels,
           datasets: [
@@ -68,7 +69,6 @@ export default {
               yAxisID: 'yCumulative',
             },
             {
-              type: 'bar',
               label: 'Daily Fees',
               data,
               backgroundColor: '#6366f1', // Indigo-500
