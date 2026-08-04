@@ -27,8 +27,10 @@ export default {
     const createChart = () => {
       if (!chartCanvas.value) return;
 
+      // Thoroughly destroy previous instance
       if (chartInstance) {
         chartInstance.destroy();
+        chartInstance = null;
       }
 
       const dailyFeesMap = calculateDailyFeesMap(props.trades);
@@ -43,7 +45,6 @@ export default {
       });
       const data = sortedDates.map(date => dailyFeesMap[date]);
 
-      // Calculate cumulative fees for the line chart
       let cumulativeSum = 0;
       const cumulativeData = data.map(val => {
         cumulativeSum += val;
@@ -53,29 +54,30 @@ export default {
       const ctx = chartCanvas.value.getContext('2d');
 
       chartInstance = new Chart(ctx, {
-        type: 'bar',
+        type: 'bar', // Base type
         data: {
           labels,
           datasets: [
             {
+              type: 'bar',
+              label: 'Daily Fees',
+              data,
+              backgroundColor: '#6366f1',
+              borderColor: '#4f46e5',
+              borderWidth: 1,
+              borderRadius: 4,
+              yAxisID: 'y',
+            },
+            {
               type: 'line',
               label: 'Cumulative Fees',
               data: cumulativeData,
-              borderColor: '#a5b4fc', // Indigo-300
+              borderColor: '#a5b4fc',
               borderWidth: 2,
               pointRadius: 0,
               pointHoverRadius: 4,
               tension: 0.1,
-              yAxisID: 'yCumulative',
-            },
-            {
-              label: 'Daily Fees',
-              data,
-              backgroundColor: '#6366f1', // Indigo-500
-              borderColor: '#4f46e5',
-              borderWidth: 1,
-              borderRadius: 4,
-              yAxisID: 'yDaily',
+              yAxisID: 'y1',
             },
           ],
         },
@@ -116,7 +118,7 @@ export default {
                 autoSkipPadding: 20,
               },
             },
-            yDaily: {
+            y: {
               type: 'linear',
               display: true,
               position: 'left',
@@ -129,7 +131,7 @@ export default {
                 callback: (value) => `$${value}`,
               },
             },
-            yCumulative: {
+            y1: {
               type: 'linear',
               display: true,
               position: 'right',
