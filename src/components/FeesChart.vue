@@ -127,7 +127,7 @@ export default {
                 drawBorder: false,
               },
               ticks: {
-                color: '#9ca3af',
+                color: '#6366f1',
                 callback: (value) => `$${value}`,
               },
             },
@@ -139,7 +139,7 @@ export default {
                 drawOnChartArea: false,
               },
               ticks: {
-                color: '#9ca3af',
+                color: '#ef4444',
                 callback: (value) => `$${value}`,
               },
             },
