@@ -72,7 +72,7 @@ export default {
               type: 'line',
               label: 'Cumulative Fees',
               data: cumulativeData,
-              borderColor: '#a5b4fc',
+              borderColor: '#ef4444',
               borderWidth: 2,
               pointRadius: 0,
               pointHoverRadius: 4,
