@@ -400,6 +400,33 @@ export function calculateTotalFees(trades) {
 }
 
 /**
+ * Calculate average fee per trade
+ * @param {Array} trades - Array of trade objects
+ * @returns {number} Average fee
+ */
+export function calculateAverageFeePerTrade(trades) {
+  const closedTrades = trades.filter(t => t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED');
+  if (closedTrades.length === 0) return 0;
+  return calculateTotalFees(closedTrades) / closedTrades.length;
+}
+
+/**
+ * Calculate fee to gross PnL ratio (Cost of doing business)
+ * @param {Array} trades - Array of trade objects
+ * @returns {number|null} Ratio as percentage
+ */
+export function calculateFeeToPnLRatio(trades) {
+  const closedTrades = trades.filter(t => t.status === 'CLOSED' || t.status === 'PARTIAL_CLOSED');
+  if (closedTrades.length === 0) return null;
+
+  const totalFees = calculateTotalFees(closedTrades);
+  const grossPnL = closedTrades.reduce((sum, t) => sum + getTradeGrossPnL(t), 0);
+
+  if (grossPnL === 0) return null;
+  return (totalFees / Math.abs(grossPnL)) * 100;
+}
+
+/**
  * Calculate total funding charges
  * @param {Array} trades - Array of trade objects
  * @returns {number} Total funding charges

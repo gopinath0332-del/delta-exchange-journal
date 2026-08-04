@@ -43,20 +43,39 @@ export default {
       });
       const data = sortedDates.map(date => dailyFeesMap[date]);
 
+      // Calculate cumulative fees for the line chart
+      let cumulativeSum = 0;
+      const cumulativeData = data.map(val => {
+        cumulativeSum += val;
+        return cumulativeSum;
+      });
+
       const ctx = chartCanvas.value.getContext('2d');
 
       chartInstance = new Chart(ctx, {
-        type: 'bar',
         data: {
           labels,
           datasets: [
             {
-              label: 'Fees Paid',
+              type: 'line',
+              label: 'Cumulative Fees',
+              data: cumulativeData,
+              borderColor: '#a5b4fc', // Indigo-300
+              borderWidth: 2,
+              pointRadius: 0,
+              pointHoverRadius: 4,
+              tension: 0.1,
+              yAxisID: 'yCumulative',
+            },
+            {
+              type: 'bar',
+              label: 'Daily Fees',
               data,
-              backgroundColor: '#6366f1', // Indigo-500, consistent with primary theme
+              backgroundColor: '#6366f1', // Indigo-500
               borderColor: '#4f46e5',
               borderWidth: 1,
               borderRadius: 4,
+              yAxisID: 'yDaily',
             },
           ],
         },
@@ -78,8 +97,9 @@ export default {
               displayColors: false,
               callbacks: {
                 label: (context) => {
+                  const label = context.dataset.label || '';
                   const value = context.parsed.y;
-                  return `Fees: ${formatCurrency(value)}`;
+                  return `${label}: ${formatCurrency(value)}`;
                 },
               },
             },
@@ -96,10 +116,25 @@ export default {
                 autoSkipPadding: 20,
               },
             },
-            y: {
+            yDaily: {
+              type: 'linear',
+              display: true,
+              position: 'left',
               grid: {
                 color: 'rgba(255, 255, 255, 0.05)',
                 drawBorder: false,
+              },
+              ticks: {
+                color: '#9ca3af',
+                callback: (value) => `$${value}`,
+              },
+            },
+            yCumulative: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+              grid: {
+                drawOnChartArea: false,
               },
               ticks: {
                 color: '#9ca3af',

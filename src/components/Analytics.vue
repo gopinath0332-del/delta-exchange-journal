@@ -194,6 +194,32 @@
 
       <!-- ACTIVITY TAB -->
       <div v-if="activeSubTab === 'activity'" class="fade-in">
+        <div class="grid grid-cols-3 gap-md mb-xl">
+          <StatsCard
+            label="Total Fees"
+            :value="formatCurrency(totalFees)"
+            valueClass="loss"
+            icon="💸"
+            iconBg="var(--gradient-danger)"
+            subtitle="Total cost of trading"
+          />
+          <StatsCard
+            label="Avg Fee / Trade"
+            :value="formatCurrency(avgFeePerTrade)"
+            valueClass="neutral"
+            icon="🏷️"
+            iconBg="linear-gradient(135deg, #6b7280 0%, #4b5563 100%)"
+            subtitle="Mean fee per execution"
+          />
+          <StatsCard
+            label="Fee / Gross PnL"
+            :value="feeToPnLRatio !== null ? formatPercentage(feeToPnLRatio) : 'N/A'"
+            :valueClass="feeToPnLRatio !== null && feeToPnLRatio > 10 ? 'loss' : 'profit'"
+            icon="📊"
+            :iconBg="feeToPnLRatio !== null && feeToPnLRatio > 10 ? 'var(--gradient-danger)' : 'var(--gradient-success)'"
+            subtitle="Cost of doing business"
+          />
+        </div>
         <div class="glass-card p-xl mb-xl">
           <h3 class="mb-md">Fees by Date</h3>
           <FeesChart :trades="yearTrades" />
@@ -257,6 +283,9 @@ import {
   calculateProfitFactor,
   calculateDisciplineScore,
   calculateSharpeRatio,
+  calculateTotalFees,
+  calculateAverageFeePerTrade,
+  calculateFeeToPnLRatio,
 } from '../utils/calculations';
 
 import { formatCurrency, formatPercentage, formatRatio } from '../utils/formatters';
@@ -346,6 +375,10 @@ export default {
       return scores.reduce((sum, s) => sum + s, 0) / scores.length;
     });
 
+    const totalFees = computed(() => calculateTotalFees(yearTrades.value));
+    const avgFeePerTrade = computed(() => calculateAverageFeePerTrade(yearTrades.value));
+    const feeToPnLRatio = computed(() => calculateFeeToPnLRatio(yearTrades.value));
+
     return {
       activeSubTab,
       subTabs,
@@ -362,6 +395,9 @@ export default {
       profitFactor,
       sharpeRatio,
       avgDisciplineScore,
+      totalFees,
+      avgFeePerTrade,
+      feeToPnLRatio,
       formatCurrency,
       formatPercentage,
       formatRatio,
